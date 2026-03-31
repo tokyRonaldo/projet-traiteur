@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "material-symbols";
+@layer base {
+  :root {
+    --background: 30 10% 98%;     /* neutral-light très clair */
+    --foreground: 210 20% 20%;    /* gris foncé neutre */
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 20% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 20% 20%;
+
+    --primary: 38 92% 50%;        /* jaune or */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 210 20% 30%;     /* gris neutre */
+    --secondary-foreground: 0 0% 98%;
+
+    --accent: 45 93% 55%;         /* or clair */
+    --accent-foreground: 210 20% 20%;
+
+    --muted: 30 10% 96%;
+    --muted-foreground: 210 10% 45%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 210 10% 88%;
+    --input: 210 10% 88%;
+    --ring: 38 92% 50%;
+
+    --radius: 0.75rem;
+
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-sans: 'Rubik', sans-serif;
+  }
+
+  .dark {
+    --background: 210 20% 10%;
+    --foreground: 0 0% 95%;
+
+    --card: 210 20% 15%;
+    --card-foreground: 0 0% 95%;
+
+    --primary: 38 92% 55%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 210 20% 35%;
+    --secondary-foreground: 0 0% 98%;
+
+    --accent: 45 90% 65%;
+    --accent-foreground: 210 20% 15%;
+
+    --muted: 210 20% 22%;
+    --muted-foreground: 210 10% 70%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 210 20% 28%;
+    --input: 210 20% 28%;
+    --ring: 38 92% 55%;
+  }
+
+  * {
+    border: 0px solid hsl(var(--border));
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .bg-pattern {
+    background-image: radial-gradient(#e63946 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .shape-star {
+    clip-path: polygon(
+      50% 0%, 61% 35%, 98% 35%, 68% 57%, 
+      79% 91%, 50% 70%, 21% 91%, 32% 57%, 
+      2% 35%, 39% 35%
+    );
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin 10s linear infinite;
+  }
+}
