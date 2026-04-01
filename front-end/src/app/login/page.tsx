@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AuthCard } from '@/components/auth/AuthCard';
@@ -5,6 +7,9 @@ import { AuthHeader } from '@/components/auth/AuthHeader';
 import Link from 'next/link';
 
 export default function LoginPage() {
+  async function connectGoogle(){
+     window.location.href = 'http://localhost:8000/api/auth/google/redirect';
+  }
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center px-4">
       <AuthCard>
@@ -66,6 +71,9 @@ export default function LoginPage() {
           >
             Créer un compte
           </Link>
+         {/*<Button onClick={connectGoogle} variant="primary" size="lg" className="w-full">
+            Google
+          </Button>*/}
         </p>
       </AuthCard>
     </div>
