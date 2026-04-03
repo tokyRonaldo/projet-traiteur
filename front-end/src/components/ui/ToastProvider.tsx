@@ -1,32 +1,31 @@
 'use client';
 
-import { useToastStore } from '@/hooks/useToast';
-import { Toast } from './Toast';
+import { useEffect, useState } from 'react';
+import CustomToast from '@/components/ui/CustomToast';
 
-export function ToastProvider() {
-  const { toasts, removeToast } = useToastStore();
+export default function ToastProvider() {
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
-  // Placement par défaut : top-right (tu peux le rendre configurable plus tard)
-  const placement = 'top-right';
+  useEffect(() => {
+    const storedToast = localStorage.getItem('toast');
 
-  const positionClasses = {
-    'top-left': 'top-4 left-4',
-    'top-center': 'top-4 left-1/2 -translate-x-1/2',
-    'top-right': 'top-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'bottom-center': 'bottom-4 left-1/2 -translate-x-1/2',
-    'bottom-right': 'bottom-4 right-4',
-  };
+    if (storedToast) {
+      setToast(JSON.parse(storedToast));
+      localStorage.removeItem('toast');
+    }
+  }, []);
+
+  if (!toast) return null;
 
   return (
-    <div className={`fixed z-[100] flex flex-col gap-2 ${positionClasses[placement]}`}>
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          {...toast}
-          onClose={removeToast}
-        />
-      ))}
-    </div>
+    <CustomToast
+      message={toast.message}
+      type={toast.type}
+      onClose={() => setToast(null)}
+      duration={toast.type === 'success' ? 2500 : 6000}
+    />
   );
 }

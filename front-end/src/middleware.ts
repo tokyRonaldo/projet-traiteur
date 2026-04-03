@@ -1,56 +1,49 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+/**
+ * 1. Liste des routes à protéger.
+ * Si l'URL commence par l'un de ces mots, l'accès est vérifié.
+ */
+const protectedRoutes = ['/dashboard', '/profile', '/caterer', '/settings'];
+
+/**
+ * 2. Liste des routes "publiques" à ignorer (facultatif).
+ * Par exemple, si /caterer/register doit rester accessible.
+ */
+const publicPaths = ['/caterer/register', '/login'];
+
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (
-    pathname.startsWith("/api/") ||
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/static/") ||
-    pathname.includes(".") ||         
-    pathname === "/favicon.ico"
-  ) {
-    return NextResponse.next();
+
+  // Récupérer le cookie de session généré par Laravel
+  // Note : Laravel nomme souvent ce cookie 'laravel_session' ou 'XSRF-TOKEN'
+  const sessionCookie = request.cookies.get('laravel_session');
+  const xsrfCookie = request.cookies.get('XSRF-TOKEN');
+
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  const isPublicPath = publicPaths.some((path) => pathname === path);
+
+  if (isProtectedRoute && !isPublicPath && !sessionCookie && !xsrfCookie) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/'; // Redirection vers la racine
+    
+    
+    return NextResponse.redirect(url);
   }
-  if (request.headers.has("x-middleware-subrequest")) {
-    return new NextResponse("Forbidden", { status: 403 });
-  }
 
-  try {
-    const res = await fetch(`${request.nextUrl.origin}/api/auth/me`, {
-      method: "GET",
-      headers: {
-        cookie: request.headers.get("cookie") || "",
-        "x-protect-mw": "1",
-      },
-      cache: "no-store",
-      redirect: "manual",     
-    });
-
-    if (!res.ok) {
-      throw new Error("Non authentifié");
-    }
-
-    const user = await res.json();
-
-    if (!user?.id || user?.role !== "CLIENT") {
-      throw new Error("Accès interdit");
-    }
-
-    const response = NextResponse.next();
-    response.headers.set("x-user-id", user.id);
-    response.headers.set("x-user-role", user.role);
-
-    return response;
-  } catch (err) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
+    /*
+     * Match toutes les routes sauf :
+     * - api (routes d'API Next.js internes)
+     * - _next/static (fichiers JS/CSS statiques)
+     * - _next/image (optimisation d'images)
+     * - favicon.ico, images public (png, jpg, etc.)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

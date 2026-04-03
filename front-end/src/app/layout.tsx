@@ -1,7 +1,8 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import { Inter, Rubik } from "next/font/google";
 import "./globals.css";
+import ToastProvider from "@/components/ui/ToastProvider";
+import { AuthProvider } from "@/context/AuthContext";   // ← Importe ici
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,17 +19,7 @@ const rubik = Rubik({
 
 export const metadata: Metadata = {
   title: "Kali Tao - Votre carrière online pour le monde de caterers",
-  description: "Rejoignez la plateforme dédiée aux professionnels de la restauration et du catering. Gérez votre carrière, vos missions et votre entreprise en toute simplicité.",
-  keywords: ["catering", "caterers", "restauration", "emploi catering", "mission traiteur", "kali tao", "professionnel catering"],
-  authors: [{ name: "Kali Tao" }],
-  icons: {
-    icon: "/favicon.ico",         
-    shortcut: "/favicon.ico",
-  },
-  openGraph: {
-    title: "Kali Tao - Votre carrière online pour le monde de caterers",
-    description: "La plateforme ultime pour les professionnels du catering et de la restauration.",
-  },
+  description: "Rejoignez la plateforme dédiée aux professionnels du catering.",
 };
 
 export default function RootLayout({
@@ -41,10 +32,13 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${rubik.variable}
                    font-sans antialiased
-                   bg-background text-foreground
-                   selection:bg-primary selection:text-white`}
+                   bg-background text-foreground`}
       >
-        {children}
+        {/* AuthProvider doit envelopper toute l'application */}
+        <AuthProvider>
+          {children}
+          <ToastProvider />
+        </AuthProvider>
       </body>
     </html>
   );
