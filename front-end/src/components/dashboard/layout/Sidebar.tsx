@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { LogoutButton } from '@/components/auth/LogoutButton';
 const Sidebar: React.FC = () => {
   return (
     <aside className="sticky top-20 h-[calc(100vh-5rem)] w-80 bg-white border-l border-[#bf3a2b]/10 p-6 overflow-y-auto hidden lg:block">
@@ -54,6 +54,7 @@ const Sidebar: React.FC = () => {
           <button className="w-full mt-6 py-3 border border-dashed border-slate-300 rounded-xl text-slate-400 text-xs font-bold hover:border-[#bf3a2b] hover:text-[#bf3a2b] transition-all">
             View Full Calendar
           </button>
+          <LogoutButton/>
         </section>
       </div>
     </aside>

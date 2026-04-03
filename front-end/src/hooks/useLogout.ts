@@ -1,37 +1,66 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export function useLogout() {
+  const { refetchUser } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const logout = async () => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/logout`,
-        {
-          method: "POST",
-          credentials: "include", 
+      // Utilitaire XSRF pour Sanctum (si vous utilisez le driver 'cookie')
+      const getCookie = (name: string) => {
+        if (typeof document === 'undefined') return null;
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+          return decodeURIComponent(parts.pop()?.split(';').shift() || '');
         }
-      );
+        return null;
+      };
 
-      if (!res.ok) {
-        throw new Error("Erreur lors de la déconnexion");
+      const response = await fetch(`${API_URL}/api/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
+        },
+        credentials: 'include', // Nécessaire pour que Laravel identifie l'utilisateur via session/cookie
+      });
+
+      if (!response.ok) {
+        // Si le serveur dit que nous ne sommes pas autorisés (401), 
+        // on considère que la session est déjà détruite.
+        if (response.status !== 401) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.message || 'Erreur lors de la déconnexion');
+        }
       }
+      await refetchUser();
 
-      // Redirige vers login
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error(err);
+      router.push('/');
+      router.refresh(); 
+
+      return { success: true };
+    } catch (err: any) {
+      const errorMessage = err.message || 'Une erreur est survenue.';
+      setError(errorMessage);
+      throw err;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  return { logout, loading };
+  return { logout, isLoading, error };
 }
