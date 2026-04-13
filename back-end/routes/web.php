@@ -12,6 +12,10 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+use App\Http\Controllers\AuthController;
+
+Route::get('auth/google', [AuthController::class, 'redirectToGoogle']);
+Route::get('auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 
 Route::get('/', function () {
     return view('welcome');

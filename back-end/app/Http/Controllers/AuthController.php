@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Caterer;
@@ -106,5 +107,40 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logged out'
         ]);
+    }
+
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    public function handleGoogleCallback(Request $request)
+    {
+        $googleUser = Socialite::driver('google')->stateless()->user();
+
+        // chercher user
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if (!$user) {
+            $user = User::create([
+                'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'password' => bcrypt(uniqid()), // password random
+            ]);
+        }
+
+        // créer token Sanctum
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        /*return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ]);*/
+        
+        // 🔥 récupérer URL frontend depuis .env
+        $frontendUrl = env('FRONTEND_URL');
+
+        // 🔥 redirection avec token
+        return redirect($frontendUrl . '/auth/success?token=' . $token);
     }
 }

@@ -20,6 +20,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/register/caterer', [AuthController::class, 'registerCaterer']);
 Route::post('/login', [AuthController::class, 'login']);
 
+//authentification par gmail
+Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
