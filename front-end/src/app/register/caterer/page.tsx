@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import LeftBrandingSection from '@/components/auth/LeftBrandSection';
 import ProgressHeader from '@/components/auth/ProgressHeader';
-import UserRegisterForm from '@/components/auth/UserRegisterForm';
+import CatererForm from '@/components/auth/CatererForm';
 export default function RegistrationPage() {
   return (
     <main className="flex-grow pt-24 pb-12 px-6">
@@ -16,7 +16,7 @@ export default function RegistrationPage() {
                 subtitle="Tell us about your culinary business." 
                 step="1" 
               />
-              <UserRegisterForm/>
+              <CatererForm />
         </div>
       </div>
     </main>

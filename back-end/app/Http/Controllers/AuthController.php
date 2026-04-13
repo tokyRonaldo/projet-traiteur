@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Caterer;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
-use App\Models\User;
-use App\Models\Role;
-use App\Models\Caterer;
 
 class AuthController extends Controller
 {
@@ -30,51 +31,56 @@ class AuthController extends Controller
 
         $user->roles()->attach($role->id);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        Auth::login($user);                    // Crée la session
+        $request->session()->regenerate();
 
         return response()->json([
-            'user' => $user,
-            'token' => $token
-        ]);
+            'message' => 'Inscription réussie ! Votre compte est en attente de vérification.',
+            'user'    => $user,
+        ], 201);
     }
 
-            // REGISTER
+    // REGISTER
     public function registerCaterer(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6'
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email',
+            'password'    => 'required|min:6',
+            'location'    => 'required|string',
+            'adresse'     => 'required|string',
+            'description' => 'nullable|string',
         ]);
-
-        $role= Role::where('name','traiteur')->first();
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password)
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
         ]);
 
-        $user->roles()->attach($role->id);
+        $role = Role::where('name', 'traiteur')->first();
+        if ($role) {
+            $user->roles()->attach($role->id);
+        }
 
-        $caterer= Caterer::create([
-            'user_id' => $user->id,
-            'company_name' => $request->name,
+        Caterer::create([
+            'user_id'     => $user->id,
+            'company_name'=> $request->name,
             'description' => $request->description,
-            'location' => $request->location,
-            'address' => $request->address,
+            'location'    => $request->location,
+            'address'     => $request->adresse,  
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        Auth::login($user);
+        
+        session()->regenerate();
 
         return response()->json([
-            'user' => $user,
-            'token' => $token
-        ]);
+            'message' => 'Inscription réussie ! Votre compte est en attente de vérification.',
+            'user'    => $user,
+        ], 201);
     }
 
-
-    // LOGIN
     public function login(Request $request)
     {
         $user = User::where('email', $request->email)->first();

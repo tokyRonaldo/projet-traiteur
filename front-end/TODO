@@ -1,6 +1,6 @@
 Aujourd'hui j'ai réglé la retour concernant d'ajout espace entre mot "reception de" & somme , Apres j'ai fais des test sous bailti pour la register user & login , création annonces , postuler annonce , gestion de canditature : 
-J'ai fais des modifications dans la card liste candidature pour la revenu mensuel , avant c'était du "Rent_per_month" qui était la et j'ai corrigé , c'est déja corrigé sur wecoco .
-J'ai parcouri jusqu'a  géneration bail signature à création location. 
+J'ai fais des modifications dans la card liste candidature pour la revenu mensuel , avant c'était du "Rent_per_month" et j'ai déja corrigé , c'est déja corrigé sur wecoco .
+J'ai parcouri jusqu'a géneration bail signature à création location. 
 Apart ca il n'y a que de suggestion lors du test sélon ma raisonement :
 *Dans le contrat bail - si l'annonce postulé est de type "colocation" , ca doit etre précisé dans le contrat bail 
 *Le contrat bail doit etre toujour  ecrit avec la langue d'inscription de propriétaire meme s'il a switché de lang dans resumé bail 

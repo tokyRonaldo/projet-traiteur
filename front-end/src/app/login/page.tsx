@@ -71,9 +71,9 @@ export default function LoginPage() {
           >
             Créer un compte
           </Link>
-         {/*<Button onClick={connectGoogle} variant="primary" size="lg" className="w-full">
+         <Button onClick={connectGoogle} variant="primary" size="lg" className="w-full">
             Google
-          </Button>*/}
+          </Button>
         </p>
       </AuthCard>
     </div>

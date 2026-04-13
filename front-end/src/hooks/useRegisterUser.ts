@@ -1,23 +1,27 @@
 'use client';
-
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { RegisterData } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export function useLogout() {
+export function useRegisterUser() {
   const { refetchUser } = useAuth();
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const logout = async () => {
+  const register = async (formData: RegisterData) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Utilitaire XSRF pour Sanctum (si vous utilisez le driver 'cookie')
+      const payload = {
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
+      };
+
+      // Fonction pour récupérer le cookie XSRF-TOKEN (important avec Laravel Sanctum)
       const getCookie = (name: string) => {
         if (typeof document === 'undefined') return null;
         const value = `; ${document.cookie}`;
@@ -28,7 +32,7 @@ export function useLogout() {
         return null;
       };
 
-      const response = await fetch(`${API_URL}/api/logout`, {
+      const response = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -36,23 +40,28 @@ export function useLogout() {
           'X-Requested-With': 'XMLHttpRequest',
           'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
         },
-        credentials: 'include', // Nécessaire pour que Laravel identifie l'utilisateur via session/cookie
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        // Si le serveur dit que nous ne sommes pas autorisés (401), 
-        // on considère que la session est déjà détruite.
-        if (response.status !== 401) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.message || 'Erreur lors de la déconnexion');
+        if (response.status === 419) {
+          throw new Error("La session de sécurité a expiré, veuillez réessayer.");
         }
+        if (response.status === 409) {
+          throw new Error(data.message || 'Cet email est déjà utilisé');
+        }
+        throw new Error(data.message || 'Échec de l’inscription');
       }
+
       await refetchUser();
 
-      router.push('/');
-      router.refresh(); 
-
-      return { success: true };
+      return {
+        success: true,
+        message: data.message || 'Inscription réussie !',
+      };
     } catch (err: any) {
       const errorMessage = err.message || 'Une erreur est survenue.';
       setError(errorMessage);
@@ -62,5 +71,5 @@ export function useLogout() {
     }
   };
 
-  return { logout, isLoading, error };
+  return { register, isLoading, error };
 }
