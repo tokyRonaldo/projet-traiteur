@@ -31,56 +31,51 @@ class AuthController extends Controller
 
         $user->roles()->attach($role->id);
 
-        Auth::login($user);                    // Crée la session
-        $request->session()->regenerate();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Inscription réussie ! Votre compte est en attente de vérification.',
-            'user'    => $user,
-        ], 201);
+            'user' => $user,
+            'token' => $token
+        ]);
     }
 
     // REGISTER
     public function registerCaterer(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email',
-            'password'    => 'required|min:6',
-            'location'    => 'required|string',
-            'adresse'     => 'required|string',
-            'description' => 'nullable|string',
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6'
         ]);
+
+        $role= Role::where('name','traiteur')->first();
 
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password)
         ]);
 
-        $role = Role::where('name', 'traiteur')->first();
-        if ($role) {
-            $user->roles()->attach($role->id);
-        }
+        $user->roles()->attach($role->id);
 
-        Caterer::create([
-            'user_id'     => $user->id,
-            'company_name'=> $request->name,
+        $caterer= Caterer::create([
+            'user_id' => $user->id,
+            'company_name' => $request->name,
             'description' => $request->description,
-            'location'    => $request->location,
-            'address'     => $request->adresse,  
+            'location' => $request->location,
+            'address' => $request->address,
         ]);
 
-        Auth::login($user);
-        
-        session()->regenerate();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Inscription réussie ! Votre compte est en attente de vérification.',
-            'user'    => $user,
-        ], 201);
+            'user' => $user,
+            'token' => $token
+        ]);
     }
 
+
+    // LOGIN
     public function login(Request $request)
     {
         $user = User::where('email', $request->email)->first();

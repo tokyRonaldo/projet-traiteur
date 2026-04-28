@@ -28,7 +28,7 @@ export function useLogin() {
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",           // indispensable pour les cookies httpOnly
+        credentials: "include", 
         body: JSON.stringify({ email, password }),
       });
 
