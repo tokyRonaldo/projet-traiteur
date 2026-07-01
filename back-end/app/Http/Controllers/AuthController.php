@@ -31,12 +31,14 @@ class AuthController extends Controller
 
         $user->roles()->attach($role->id);
 
-        Auth::login($user);                    // Crée la session
-        $request->session()->regenerate();
+        //Auth::login($user);                    // Crée la session
+        //$request->session()->regenerate();
+         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Inscription réussie ! Votre compte est en attente de vérification.',
             'user'    => $user,
+            'token'    => $token,
         ], 201);
     }
 
@@ -48,7 +50,7 @@ class AuthController extends Controller
             'email'       => 'required|email|unique:users,email',
             'password'    => 'required|min:6',
             'location'    => 'required|string',
-            'adresse'     => 'required|string',
+            'address'     => 'required|string',
             'description' => 'nullable|string',
         ]);
 
@@ -68,16 +70,21 @@ class AuthController extends Controller
             'company_name'=> $request->name,
             'description' => $request->description,
             'location'    => $request->location,
-            'address'     => $request->adresse,  
+            'address'     => $request->address,  
+            'website'     => $request->website,  
+            'contact'     => $request->contact,  
         ]);
 
-        Auth::login($user);
+        //Auth::login($user);
         
-        session()->regenerate();
+        //session()->regenerate();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
 
         return response()->json([
             'message' => 'Inscription réussie ! Votre compte est en attente de vérification.',
             'user'    => $user,
+            'token'    => $token,
         ], 201);
     }
 

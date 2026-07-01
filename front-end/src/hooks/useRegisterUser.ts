@@ -2,13 +2,15 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { RegisterData } from '@/types';
+import { useAuthService } from './useAuthService';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export function useRegisterUser() {
-  const { refetchUser } = useAuth();
+  const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const {saveAuthentication} = useAuthService();
 
   const register = async (formData: RegisterData) => {
     setIsLoading(true);
@@ -32,7 +34,7 @@ export function useRegisterUser() {
         return null;
       };
 
-      const response = await fetch(`${API_URL}/api/register`, {
+      /*const response = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -41,6 +43,15 @@ export function useRegisterUser() {
           'X-XSRF-TOKEN': getCookie('XSRF-TOKEN') || '',
         },
         credentials: 'include',
+        body: JSON.stringify(payload),
+      }); */
+
+      const response = await fetch(`${API_URL}/api/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: JSON.stringify(payload),
       });
 
@@ -56,7 +67,10 @@ export function useRegisterUser() {
         throw new Error(data.message || 'Échec de l’inscription');
       }
 
-      await refetchUser();
+      saveAuthentication(data.token, data.user);
+
+
+      //await refetchUser();
 
       return {
         success: true,

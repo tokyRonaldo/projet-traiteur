@@ -8,6 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * Cette table contient les indisponibilités exceptionnelles.
      */
     public function up(): void
     {

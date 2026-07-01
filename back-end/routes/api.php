@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Admin\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,8 +30,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('admin/user', [UserController::class, 'index']);
+    Route::delete('admin/user/delete/{id}', [UserController::class, 'destroy']);
+    Route::post('admin/user/update-role/{id}', [UserController::class, 'updateRole']);
+
+    Route::get('admin/caterer/show/{id}', [UserController::class, 'showCaterer']);
+    Route::get('admin/caterer/update-status/{id}', [UserController::class, 'updateStatusCaterer']);
+    Route::post('admin/create/admin', [UserController::class, 'storeAdmin']);
+
+});
+
 //pour admin
 Route::middleware(['auth:sanctum', 'role:admin'])->get('/admin', function () {
-    return 'Admin only';
+
 });
 

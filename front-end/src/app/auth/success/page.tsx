@@ -1,54 +1,28 @@
 'use client';
-
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { useAuth } from '@/context/AuthContext';
 
-export default function GoogleSuccess() {
+export default function AuthCallback() {
   const router = useRouter();
-
-  async function fetchUser(token : String){
-        // récupérer user
-        //changer l'url pour utiliser variable dans .env
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${apiUrl}/api/user`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        });
-        if (!res.ok) throw new Error('Erreur lors de la récupération de l’utilisateur');
-        const user = await res.json();
-        return user;
-
-  }
+  const params = useSearchParams();
+  const { fetchUser } = useAuth();
 
   useEffect(() => {
-    // récupérer token depuis URL
-    const params = new URLSearchParams(window.location.search);
-    console.log(params);
-    const token = params.get('token');
-
-    if (token) {
-      (async () => {
-        try {
-          // stocker token
-          //localStorage.setItem('token', token);
-
-          // récupérer user
-          const userData = await fetchUser(token);
-
-          // stocker user
-          //localStorage.setItem('user', JSON.stringify(userData));
-
-          console.log('User:', userData);
-
-          // redirection vers dashboard
-          //router.push('/dashboard');
-        } catch (err) {
-          console.error(err);
-        }  
-        })();  
-    }
+    const run = async () => {
+      const token = params.get('token');
+      if (token) {
+        localStorage.setItem('token', token);
+        Cookies.set('token', token, { expires: 7, sameSite: 'lax' });
+        await fetchUser(); // récupère l'utilisateur AVANT de rediriger
+        router.push('/dashboard');
+      } else {
+        router.push('/login');
+      }
+    };
+    run();
   }, []);
 
-  return <p>Connexion Google en cours...</p>;
+  return <p>Connexion en cours...</p>;
 }

@@ -4,8 +4,10 @@ export type RegisterCatererData = {
   email: string;
   password: string;
   location: string;
-  adresse: string;
+  address: string;
   description: string;
+  website: string;
+  contact: string;
 };
 export type RegisterData={
   name:string;

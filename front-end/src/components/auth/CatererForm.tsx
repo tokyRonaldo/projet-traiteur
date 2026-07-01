@@ -28,8 +28,10 @@ export default function CatererForm() {
       email: formData.get('email') as string,
       password: formData.get('password') as string,
       location: formData.get('location') as string,
-      adresse: formData.get('adresse') as string,
+      address: formData.get('address') as string,
       description: formData.get('description') as string,
+      website: formData.get('website') as string,
+      contact: formData.get('contact') as string,
     };
 
     try {
@@ -70,10 +72,10 @@ export default function CatererForm() {
 
           {/* Contact Person */}
           <Input
-            label="Contact Person"
-            id="contact_person"
-            name="contact_person"
-            placeholder="Full Name"
+            label="Contact"
+            id="contact"
+            name="contact"
+            placeholder="034......."
             type="text"
           />
         </div>
@@ -91,8 +93,8 @@ export default function CatererForm() {
         {/* Adresse */}
         <Input
           label="Business Address"
-          id="adresse"
-          name="adresse"
+          id="address"
+          name="address"
           placeholder="123 Culinary Way, Suite 100"
           type="text"
           required

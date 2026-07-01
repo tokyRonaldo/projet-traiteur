@@ -1,4 +1,7 @@
-import React from 'react';
+'use client'
+import React, { use } from 'react';
+
+import { useAuth } from '@/context/AuthContext';
 
 const TopNav: React.FC = () => {
   const navItems = [
@@ -9,6 +12,8 @@ const TopNav: React.FC = () => {
     { label: 'Calendar', icon: 'calendar_month' },
     { label: 'Analytics', icon: 'analytics' },
   ];
+
+  const {logout} = useAuth();
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-[#bf3a2b]/10 shadow-sm w-full">
@@ -39,7 +44,7 @@ const TopNav: React.FC = () => {
             <span className="material-symbols-outlined">notifications</span>
             <span className="absolute top-0 right-0 w-2 h-2 bg-[#bf3a2b] rounded-full"></span>
           </button>
-          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-[#bf3a2b]/20">
+          <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-[#bf3a2b]/20" onClick={logout}>
             <img alt="Caterer" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1urYFINazAGdozHGaZ48BGOPsrC-tTdjPwWxRVNEMoV9o-wETcS2GN2VmGaFJATYh87P6EiQFwY5Z2l3zDz6ItT83W5prwXRh-oEax5WfatVC83ZiOhEVNj6qkZ2ocEmJ2hW3JM4SB_cJCh8X6oIUJtHgcenmyRHJaomEq_bNWBRhUnSu0BBtahqplqzomuFH_WOekDieMA0n4-jV-U1HH-y_ho8apo4rk6Vnd8sYIEFsPsUZ4m9DWTQq4GxXnlyWshzERmHi9xQ4"/>
           </div>
           <button className="bg-[#bf3a2b] text-white px-5 py-2 rounded-xl font-bold text-sm shadow-lg shadow-[#bf3a2b]/20 active:scale-95 transition-transform">

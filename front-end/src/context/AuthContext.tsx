@@ -1,73 +1,88 @@
+// context/AuthContext.js
 'use client';
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState , useCallback} from 'react';
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: any;
+  setUser: any;
   loading: boolean;
   isAuthenticated: boolean;
-  refetchUser: () => Promise<void>;
+  logout: () => Promise<void>;
+  fetchUser: () => Promise<void>;
 }
+
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  setUser : null,
   loading: true,
   isAuthenticated: false,
-  refetchUser: async () => {},
+  logout: async () => {},
+  fetchUser: async () => {},
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter()
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const fetchUser = useCallback(async () => {
+ const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const url = `${API_URL}/api/user`;
-      await fetch(`${API_URL}/sanctum/csrf-cookie`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const res = await fetch(url, {
-        method: 'GET',
-        credentials: 'include',
+      const res = await fetch(`${API_URL}/api/user`, {
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
         },
       });
+
       if (res.ok) {
         const data = await res.json();
         setUser(data);
       } else {
+        localStorage.removeItem('token');
+        Cookies.remove('token');
         setUser(null);
       }
-    } catch (err: any) {
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [API_URL]);
 
   useEffect(() => {
     fetchUser();
-  }, [fetchUser]);
+  }, []);
 
-  const refetchUser = async () => {
-    setLoading(true);
-    await fetchUser();
+
+  const logout = async () => {
+    const token = localStorage.getItem('token');
+    await fetch(`${API_URL}/api/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    localStorage.removeItem('token');
+    Cookies.remove('token');
+    setUser(null);
+    router.push('/login');
+
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      isAuthenticated: !!user,
-      refetchUser,
-    }}>
+    <AuthContext.Provider value={{ user, setUser, loading, isAuthenticated : !!user,logout ,fetchUser}}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => useContext(AuthContext);

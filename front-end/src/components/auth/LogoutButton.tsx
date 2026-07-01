@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/Button'; 
-import { useLogout } from '@/hooks/useLogout';
+import { useAuth } from '@/context/AuthContext';
 import { LogOut, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,7 +17,7 @@ export function LogoutButton({
   className, 
   children 
 }: LogoutButtonProps) {
-  const { logout, isLoading } = useLogout();
+  const {logout, loading} = useAuth()
 
   const handleLogout = async () => {
     try {
@@ -31,16 +31,16 @@ export function LogoutButton({
     <Button
       className={cn("gap-2", className)}
       onClick={handleLogout}
-      disabled={isLoading}
+      disabled={loading}
     >
-      {isLoading ? (
+      {loading ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
         <LogOut className="h-4 w-4" />
       )}
       
       {/* Si on passe du texte en enfant, on l'affiche, sinon texte par défaut */}
-      {children || (isLoading ? "Déconnexion..." : "Se déconnecter")}
+      {children || (loading ? "Déconnexion..." : "Se déconnecter")}
     </Button>
   );
 }
