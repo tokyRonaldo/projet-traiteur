@@ -15,8 +15,19 @@ export default function AuthCallback() {
       if (token) {
         localStorage.setItem('token', token);
         Cookies.set('token', token, { expires: 7, sameSite: 'lax' });
-        await fetchUser(); // récupère l'utilisateur AVANT de rediriger
-        router.push('/dashboard');
+        const result = await fetchUser(); // récupère l'utilisateur AVANT de rediriger
+        const role = result?.roles?.[0]?.name;
+        if(role == 'traiteur'){
+          router.push('/caterer/dashboard');
+
+        }
+        else if(role == 'client'){
+          router.push('/client/dashboard');
+        }
+        else{
+          router.push('/admin/dashboard');
+        }
+
       } else {
         router.push('/login');
       }

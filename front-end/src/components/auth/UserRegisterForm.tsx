@@ -5,9 +5,11 @@ import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import CustomToast from '../ui/CustomToast';
 import type { RegisterData } from '@/types';
+import { useRouter } from 'next/navigation';
 
 export default function UserRegisterForm() {
   const { register, isLoading, error } = useRegisterUser();
+  const router = useRouter();
 
   const [toast, setToast] = useState<{
     message: string;
@@ -44,10 +46,9 @@ export default function UserRegisterForm() {
         type: 'success',
       });
 
-      // Redirection après succès
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1800);
+      router.push('/client/dashboard');
+
+
     } catch (err: any) {
       setToast({
         message: err.message || 'Une erreur est survenue.',

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthService } from './useAuthService';
+import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -11,6 +12,7 @@ export function useLoginUser() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const {saveAuthentication} = useAuthService();
+  const router = useRouter()
 
   const login = async (data: { email: string; password: string }) => {
     setIsLoading(true);
@@ -36,6 +38,18 @@ export function useLoginUser() {
       }
 
       saveAuthentication(result.token, result.user);
+      if(result.role == 'traiteur'){
+        router.push('/caterer/dashboard');
+
+      }
+      else if(result.role == 'client'){
+        router.push('/client/dashboard');
+      }
+      else{
+        router.push('/admin/dashboard');
+      }
+
+      console.log(result.role);
 
       return {
         success: true,

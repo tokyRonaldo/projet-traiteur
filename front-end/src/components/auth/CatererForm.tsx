@@ -35,8 +35,13 @@ export default function CatererForm() {
     };
 
     try {
-      await register(data);
-      router.push('/');
+      const result = await register(data);
+      
+      setToast({
+        message: result?.message || 'Inscription réussie !',
+        type: 'success',
+      });
+      router.push('/register/caterer_pending');
 
     } catch (err: any) {
       setToast({

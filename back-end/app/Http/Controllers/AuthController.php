@@ -90,7 +90,7 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $user = User::where('email', $request->email)->first();
+        $user = User::with('roles')->where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
@@ -101,15 +101,22 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'role' => $user->roles->first()?->name,
             'token' => $token
         ]);
     }
 
     // USER
-    public function user(Request $request)
+     public function user(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user()->load('roles');
+
+        return response()->json($user);
     }
 
     // LOGOUT

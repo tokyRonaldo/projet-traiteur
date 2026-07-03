@@ -13,125 +13,6 @@ use Illuminate\Support\Facades\Http;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $users=User::with(['roles','caterer'])->get();
-        $roles=Role::All();
-        return response()->json([
-            'users' => $users,
-            'roles' => $roles
-        ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function storeAdmin(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6'
-        ]);
-
-        $role= Role::where('name','admin')->first();
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password)
-        ]);
-
-        $user->roles()->attach($role->id);
-
-        return response()->json([
-            'message' => 'Nouvelle admin créer avec succès',
-            'user'    => $user,
-        ], 201);
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function showCaterer(string $id)
-    {
-        $caterer= Caterer::with('user')->get();
-        return response()->json($caterer);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    public function updateRole(Request $request, int $id)
-    {
-        $request->validate([
-            'role_id' => 'required|exists:roles,id'
-        ]);
-
-        try {
-            $user = User::findOrFail($id);
-
-            // Remplace tous les rôles par le nouveau
-            $user->roles()->sync([$request->role_id]);
-
-            return response()->json([
-                'status' => 200,
-                'msg' => 'Rôle mis à jour avec succès'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'msg' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(int $id)
-    {
-        try {
-            $user = User::find($id);
-
-            if ($user) {
-                $user->delete();
-
-                return response()->json([
-                    'status' => 200,
-                    'msg' => "Utilisateur effacé avec succès"
-                ], 200);
-            } else {
-                return response()->json([
-                    'status' => 404,
-                    'msg' => "Utilisateur non trouvé"
-                ], 404);
-            }
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'msg' => $e->getMessage()
-            ], 500);
-        }
-    }
     public function updateStatusCaterer( Request $request,int $id)
     {
         try{
@@ -153,5 +34,130 @@ class UserController extends Controller
                 'msg' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+    
+
+
+     // GET admin/user
+    public function index(Request $request)
+    {
+        $query = User::with('roles');
+
+        if ($request->has('role')) {
+            $query->whereHas('roles', fn($q) => $q->where('name', $request->role));
+        }
+
+        if ($request->has('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        return response()->json($query->latest()->paginate(15));
+    }
+
+    // DELETE admin/user/delete/{id}
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return response()->json(['message' => 'Utilisateur supprimé']);
+    }
+
+    // POST admin/user/update-role/{id}
+    public function updateRole(Request $request, $id)
+    {
+        $request->validate([
+            'role_id' => 'required|exists:roles,id'
+        ]);
+
+        $user = User::findOrFail($id);
+        $user->roles()->sync([$request->role_id]);
+
+        return response()->json([
+            'message' => 'Rôle mis à jour',
+            'user' => $user->load('roles')
+        ]);
+    }
+
+    // GET admin/caterer/show/{id}
+    public function showCaterer($id)
+    {
+        $caterer = Caterer::with(['user', 'services', 'pastEvents', 'reviews', 'media'])
+            ->findOrFail($id);
+
+        return response()->json($caterer);
+    }
+
+    // POST admin/create/admin
+    public function storeAdmin(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+        ]);
+
+        $admin = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+        ]);
+
+        $adminRole = \App\Models\Role::where('name', 'admin')->first();
+        $admin->roles()->attach($adminRole->id);
+
+        return response()->json([
+            'message' => 'Administrateur créé',
+            'user' => $admin
+        ], 201);
+    }
+
+    // Bonus utile : suspendre un user (Phase 3 demande "Suspendre")
+    public function suspend($id)
+    {
+        $user = User::findOrFail($id);
+        $user->update(['is_banned' => true]);
+
+        return response()->json(['message' => 'Utilisateur suspendu']);
+    }
+
+    public function unsuspend($id)
+    {
+        $user = User::findOrFail($id);
+        $user->update(['is_banned' => false]);
+
+        return response()->json(['message' => 'Utilisateur réactivé']);
+    }
+
+    // Clients uniquement (Phase 3 /admin/clients)
+    public function clients(Request $request)
+    {
+        $query = User::whereHas('roles', fn($q) => $q->where('name', 'client'));
+
+        if ($request->has('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        return response()->json($query->latest()->paginate(15));
+    }
+
+    // Traiteurs validés uniquement (Phase 3 /admin/caterers)
+    public function caterers(Request $request)
+    {
+        $query = Caterer::with('user')->where('verified', true);
+
+        if ($request->has('location')) {
+            $query->where('location', $request->location);
+        }
+        if ($request->has('rating')) {
+            $query->where('rating', '>=', $request->rating);
+        }
+
+        return response()->json($query->latest()->paginate(15));
     }
 }
