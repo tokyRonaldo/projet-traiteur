@@ -22,8 +22,19 @@ class UserController extends Controller
 
             $resp = Http::post('http://localhost:5678/webhook-test/caterer-status', [
                 'caterer_id' => $caterer,
-                'status' => true
+                'status' => true,
+                'frontend_url' => config('app.frontend_url')
             ]);
+
+            // 🔥 vérifier si n8n a répondu correctement
+            if (!$resp->successful()) {
+                return response()->json([
+                    'status' => 500,
+                    'msg' => 'Erreur webhook n8n',
+                    'error' => $resp->body()
+                ], 500);
+            }
+
             return response()->json([
                 'status' => 200,
                 'msg' => 'status changer avec succès'
@@ -149,7 +160,8 @@ class UserController extends Controller
     // Traiteurs validés uniquement (Phase 3 /admin/caterers)
     public function caterers(Request $request)
     {
-        $query = Caterer::with('user')->where('verified', true);
+        $verified = $request->query('verified',1);
+        $query = Caterer::with('user')->where('verified', $verified);
 
         if ($request->has('location')) {
             $query->where('location', $request->location);

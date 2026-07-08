@@ -1,5 +1,5 @@
 import Sidebar from "@/components/caterer/Sidebar";
-import Header from "@/components/caterer/Header";
+import HeaderDashboard from "@/components/caterer/HeaderDashboard";
 import DashboardGrid from "@/components/caterer/dashboard/DashboardGrid";
 
 export default function CatererDashboard() {
@@ -8,7 +8,7 @@ export default function CatererDashboard() {
       <Sidebar />
 
       <main className="ml-72 flex-1 p-6 max-w-[1200px] mx-auto">
-        <Header />
+        <HeaderDashboard />
         <DashboardGrid />
       </main>
     </div>

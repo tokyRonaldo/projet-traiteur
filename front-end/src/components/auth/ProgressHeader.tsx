@@ -12,11 +12,6 @@ export default function ProgressHeader({
           <h2 className="text-2xl font-black text-on-surface">{title}</h2>
           <p className="text-on-surface-variant">{subtitle}</p>
         </div>
-        <div className="text-right">
-          <span className="text-xs font-bold text-primary uppercase tracking-widest">
-            Step {step} of 2
-          </span>
-        </div>
       </div>
 
       {/* Barre de progression */}

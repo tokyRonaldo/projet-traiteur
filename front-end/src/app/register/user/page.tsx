@@ -11,11 +11,6 @@ export default function RegistrationPage() {
         <LeftBrandingSection />
 
         <div className="lg:col-span-7 bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant p-8 md:p-12">
-              <ProgressHeader 
-                title="Company Information" 
-                subtitle="Tell us about your culinary business." 
-                step="1" 
-              />
               <UserRegisterForm/>
         </div>
       </div>

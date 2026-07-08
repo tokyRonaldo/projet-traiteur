@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\{
     AdminDashboardController,
     AdminServiceController,
@@ -11,7 +12,13 @@ use App\Http\Controllers\Admin\{
     AdminPaymentController,
     AdminReviewController,
     AdminStatisticsController,
+    AdminQuoteController,
+    AdminCategoryController,
+    AdminBookingController
 };
+
+use App\Http\Controllers\Caterer\CatererProfileController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +43,13 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
+});
+
+
+Route::middleware(['auth:sanctum', 'role:traiteur'])->prefix('caterer')->group(function () {
+    Route::get('profile', [CatererProfileController::class, 'show']);
+    Route::put('profile', [CatererProfileController::class, 'update']);
+    Route::post('profile/logo', [CatererProfileController::class, 'updateLogo']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
@@ -81,6 +95,23 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Statistiques
     Route::get('admin/statistics', [AdminStatisticsController::class, 'index']);
 
+     // --- Devis ---
+    Route::get('admin/quotes', [AdminQuoteController::class, 'index']);
+    Route::get('admin/quote/show/{id}', [AdminQuoteController::class, 'show']);
+
+    // --- Catégories ---
+    Route::get('admin/categories', [AdminCategoryController::class, 'index']);
+    Route::post('admin/category/store', [AdminCategoryController::class, 'store']);
+    Route::put('admin/category/update/{id}', [AdminCategoryController::class, 'update']);
+    Route::delete('admin/category/delete/{id}', [AdminCategoryController::class, 'destroy']);
+
+    // --- Réservations ---
+    Route::get('admin/bookings', [AdminBookingController::class, 'index']);
+    Route::get('admin/booking/show/{id}', [AdminBookingController::class, 'show']);
+
+    Route::get('admin/profile', [AdminProfileController::class, 'show']);
+    Route::put('admin/profile', [AdminProfileController::class, 'update']);
+    Route::put('admin/profile/password', [AdminProfileController::class, 'updatePassword']);
 
 
 });

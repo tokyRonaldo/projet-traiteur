@@ -7,16 +7,17 @@ import { Button } from '../ui/Button';
 import CustomToast from '../ui/CustomToast';
 import type { RegisterCatererData } from '@/types';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
 export default function CatererForm() {
   const { register, isLoading, error } = useRegisterCaterer();
 
-  // État pour le toast
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error';
   } | null>(null);
   const router = useRouter();
-  
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setToast(null);
@@ -36,16 +37,15 @@ export default function CatererForm() {
 
     try {
       const result = await register(data);
-      
+
       setToast({
         message: result?.message || 'Inscription réussie !',
         type: 'success',
       });
       router.push('/register/caterer_pending');
-
     } catch (err: any) {
       setToast({
-        message: err.message || 'Une erreur est survenue lors de l’inscription.',
+        message: err.message || "Une erreur est survenue lors de l'inscription.",
         type: 'error',
       });
     }
@@ -53,13 +53,20 @@ export default function CatererForm() {
 
   return (
     <>
+      <div className="mb-6 text-center">
+        <h2 className="text-xl font-bold">Créer un compte traiteur</h2>
+        <p className="text-sm text-gray-500">
+          Renseignez les informations de votre entreprise pour proposer vos services sur la plateforme.
+        </p>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Nom de l'entreprise */}
         <Input
-          label="Company Name"
+          label="Nom de l'entreprise"
           id="name"
           name="name"
-          placeholder="e.g. Heirloom Harvest Catering"
+          placeholder="Ex : Traiteur Heirloom Harvest"
           type="text"
           required
         />
@@ -67,15 +74,15 @@ export default function CatererForm() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Email */}
           <Input
-            label="Email Professionnel"
+            label="Email professionnel"
             id="email"
             name="email"
-            placeholder="contact@yourcatering.com"
+            placeholder="contact@votretraiteur.com"
             type="email"
             required
           />
 
-          {/* Contact Person */}
+          {/* Contact */}
           <Input
             label="Contact"
             id="contact"
@@ -97,17 +104,17 @@ export default function CatererForm() {
 
         {/* Adresse */}
         <Input
-          label="Business Address"
+          label="Adresse professionnelle"
           id="address"
           name="address"
-          placeholder="123 Culinary Way, Suite 100"
+          placeholder="123 Rue Culinaire, Bureau 100"
           type="text"
           required
         />
 
         {/* Ville / Location */}
         <Input
-          label="Ville / Location"
+          label="Ville / Localisation"
           id="location"
           name="location"
           placeholder="Antananarivo, Madagascar"
@@ -135,10 +142,10 @@ export default function CatererForm() {
 
         {/* Website (optionnel) */}
         <Input
-          label="Website (optionnel)"
+          label="Site web (optionnel)"
           id="website"
           name="website"
-          placeholder="https://www.yourkitchen.com"
+          placeholder="https://www.votretraiteur.com"
           type="url"
         />
 
@@ -155,21 +162,31 @@ export default function CatererForm() {
             className="flex-grow text-lg"
             disabled={isLoading}
           >
-            {isLoading ? 'Inscription en cours...' : 'Continue to Step 2'}
-          </Button>
-
-          <Button variant="secondary" type="button" disabled={isLoading}>
-            Save Draft
+            {isLoading ? 'Inscription en cours...' : 'Créer mon compte traiteur'}
           </Button>
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-4">
-          By continuing, you agree to Saffron Hearth&apos;s{' '}
+          En continuant, vous acceptez les{' '}
           <a href="#" className="underline hover:text-primary">
-            Caterer Terms of Service
+            Conditions d&apos;utilisation pour traiteurs
           </a>
           .
         </p>
+
+        <div className="text-center text-sm text-gray-600">
+          Vous avez déjà un compte ?{' '}
+          <Link href="/login" className="text-indigo-600 font-medium hover:underline">
+            Se connecter
+          </Link>
+        </div>
+
+        <div className="text-center text-sm text-gray-600">
+          Vous êtes un client ?{' '}
+          <Link href="/register" className="text-indigo-600 font-medium hover:underline">
+            Inscrivez-vous en tant que client
+          </Link>
+        </div>
       </form>
 
       {toast && (
