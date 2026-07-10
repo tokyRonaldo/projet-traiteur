@@ -17,7 +17,21 @@ use App\Http\Controllers\Admin\{
     AdminBookingController
 };
 
-use App\Http\Controllers\Caterer\CatererProfileController;
+use App\Http\Controllers\Caterer\{
+    CatererEventRequestController,
+    CatererQuoteController,
+    CatererBookingController,
+    CatererAvailabilityController,
+    CatererMediaController,
+    CatererMessageController,
+    CatererReviewController,
+    CatererPaymentController,
+    CatererSubscriptionController,
+    CatererNotificationController,
+    CatererProfileController,
+    CatererServiceController,
+    CatererDashboardController
+};
 
 
 /*
@@ -50,7 +64,76 @@ Route::middleware(['auth:sanctum', 'role:traiteur'])->prefix('caterer')->group(f
     Route::get('profile', [CatererProfileController::class, 'show']);
     Route::put('profile', [CatererProfileController::class, 'update']);
     Route::post('profile/logo', [CatererProfileController::class, 'updateLogo']);
+
+    Route::get('services', [CatererServiceController::class, 'index']);
+    Route::get('service/show/{id}', [CatererServiceController::class, 'show']);
+    Route::post('service/store', [CatererServiceController::class, 'store']);
+    Route::put('service/update/{id}', [CatererServiceController::class, 'update']);
+    Route::put('service/enable/{id}', [CatererServiceController::class, 'enable']);
+    Route::put('service/disable/{id}', [CatererServiceController::class, 'disable']);
+    Route::delete('service/delete/{id}', [CatererServiceController::class, 'destroy']);
+    Route::get('categories', [CatererServiceController::class, 'categories']);
+
+
+    // Demandes
+    Route::get('event-requests', [CatererEventRequestController::class, 'index']);
+    Route::get('event-request/show/{id}', [CatererEventRequestController::class, 'show']);
+    Route::put('event-request/status/{id}', [CatererEventRequestController::class, 'updateStatus']);
+
+    // Devis
+    Route::get('quotes', [CatererQuoteController::class, 'index']);
+    Route::get('quote/show/{id}', [CatererQuoteController::class, 'show']);
+    Route::post('quote/store', [CatererQuoteController::class, 'store']);
+    Route::put('quote/update/{id}', [CatererQuoteController::class, 'update']);
+    Route::delete('quote/delete/{id}', [CatererQuoteController::class, 'destroy']);
+
+    // Réservations
+    Route::get('bookings', [CatererBookingController::class, 'index']);
+    Route::get('booking/show/{id}', [CatererBookingController::class, 'show']);
+    Route::put('booking/status/{id}', [CatererBookingController::class, 'updateStatus']);
+
+    // Disponibilité
+    Route::get('calendar', [CatererAvailabilityController::class, 'calendar']);
+    Route::get('working-hours', [CatererAvailabilityController::class, 'workingHours']);
+    Route::put('working-hours', [CatererAvailabilityController::class, 'updateWorkingHours']);
+    Route::post('availability/block', [CatererAvailabilityController::class, 'block']);
+    Route::delete('availability/unblock/{id}', [CatererAvailabilityController::class, 'unblock']);
+
+    // Galerie
+    Route::get('gallery', [CatererMediaController::class, 'index']);
+    Route::post('gallery/upload', [CatererMediaController::class, 'upload']);
+    Route::delete('gallery/delete/{id}', [CatererMediaController::class, 'destroy']);
+
+    // Messages
+    Route::get('conversations', [CatererMessageController::class, 'conversations']);
+    Route::get('conversations/{partnerId}/messages', [CatererMessageController::class, 'messages']);
+    Route::post('conversations/{partnerId}/messages', [CatererMessageController::class, 'send']);
+
+    // Avis
+    Route::get('reviews', [CatererReviewController::class, 'index']);
+    Route::post('reviews/{id}/reply', [CatererReviewController::class, 'reply']);
+
+    // Paiements
+    Route::get('payments', [CatererPaymentController::class, 'index']);
+
+    // Abonnement
+    Route::get('subscription', [CatererSubscriptionController::class, 'show']);
+    Route::post('subscription/subscribe', [CatererSubscriptionController::class, 'subscribe']);
+    Route::put('subscription/cancel', [CatererSubscriptionController::class, 'cancel']);
+
+    // Notifications
+    Route::get('notifications', [CatererNotificationController::class, 'index']);
+    Route::put('notifications/{id}/read', [CatererNotificationController::class, 'markAsRead']);
+    Route::put('notifications/read-all', [CatererNotificationController::class, 'markAllAsRead']);
+
+    Route::get('dashboard', [CatererDashboardController::class, 'index']);
+    Route::get('dashboard/upcoming', [CatererDashboardController::class, 'upcoming']);
+    Route::get('dashboard/revenue-chart', [CatererDashboardController::class, 'revenueChart']);
 });
+
+
+
+
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('admin/user', [UserController::class, 'index']);

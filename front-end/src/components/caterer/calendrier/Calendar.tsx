@@ -1,7 +1,7 @@
 // components/caterer/calendar/Calendar.tsx
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
@@ -10,29 +10,33 @@ import {
   ArrowRight,
   Lock,
   Plane,
+  X,
 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface CalendarEvent {
-  date: string; // format YYYY-MM-DD
+  date: string;
   label: string;
   type: 'booking' | 'prep' | 'blocked' | 'vacation';
 }
 
-// Exemple — à remplacer par un vrai fetch (GET /caterer/availability)
-const MOCK_EVENTS: CalendarEvent[] = [
-  { date: '2026-07-02', label: 'Dégustation - Miller', type: 'booking' },
-  { date: '2026-07-06', label: 'Déjeuner entreprise (40p)', type: 'booking' },
-  { date: '2026-07-06', label: 'Préparation: Gala', type: 'prep' },
-  { date: '2026-07-07', label: 'Gala Soirée (120p)', type: 'booking' },
-  { date: '2026-07-11', label: 'Congés', type: 'vacation' },
-  { date: '2026-07-12', label: 'Congés', type: 'vacation' },
-];
+interface WorkingHourItem {
+  id?: number;
+  day_of_week: number; // 1 = Lundi ... 7 = Dimanche
+  is_open: boolean;
+  start_time: string | null;
+  end_time: string | null;
+}
 
 const WEEKDAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 const MONTH_NAMES = [
   'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
 ];
+const DAY_LABELS: Record<number, string> = {
+  1: 'Lundi', 2: 'Mardi', 3: 'Mercredi', 4: 'Jeudi',
+  5: 'Vendredi', 6: 'Samedi', 7: 'Dimanche',
+};
 
 function formatDateKey(year: number, month: number, day: number) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -41,7 +45,13 @@ function formatDateKey(year: number, month: number, day: number) {
 export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'agenda'>('month');
-  const [events] = useState<CalendarEvent[]>(MOCK_EVENTS);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [workload, setWorkload] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const [workingHours, setWorkingHours] = useState<WorkingHourItem[]>([]);
+  const [hoursModalOpen, setHoursModalOpen] = useState(false);
+  const [savingHours, setSavingHours] = useState(false);
 
   const today = new Date();
   const year = currentDate.getFullYear();
@@ -53,17 +63,12 @@ export default function Calendar() {
 
   const cells = useMemo(() => {
     const result: { day: number; currentMonth: boolean; dateKey: string }[] = [];
-
-    // Jours du mois précédent (grisés)
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-      const day = daysInPrevMonth - i;
-      result.push({ day, currentMonth: false, dateKey: '' });
+      result.push({ day: daysInPrevMonth - i, currentMonth: false, dateKey: '' });
     }
-    // Jours du mois en cours
     for (let day = 1; day <= daysInMonth; day++) {
       result.push({ day, currentMonth: true, dateKey: formatDateKey(year, month, day) });
     }
-    // Compléter jusqu'à un multiple de 7
     while (result.length % 7 !== 0) {
       const day = result.length - (firstDayOfWeek + daysInMonth) + 1;
       result.push({ day, currentMonth: false, dateKey: '' });
@@ -79,12 +84,107 @@ export default function Calendar() {
   const goToPrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const goToNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
-  const handleBlockDates = () => {
-    // À terme : ouvrir un vrai modal avec sélection de plage de dates
-    const reason = prompt('Raison du blocage (ex: congés, maintenance) :');
-    if (reason) {
-      // TODO: appel API POST /caterer/availability/block
-      alert(`Période bloquée : ${reason}`);
+  const loadCalendar = useCallback(async () => {
+    setLoading(true);
+    const monthKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+    try {
+      const res = await api.get(`caterer/calendar?month=${monthKey}`);
+
+      const bookingEvents: CalendarEvent[] = res.bookings.map((b: any) => ({
+        date: b.event_date,
+        label: b.title,
+        type: 'booking',
+      }));
+
+      const blockEvents: CalendarEvent[] = res.blocks.flatMap((blk: any) => {
+        const dates: CalendarEvent[] = [];
+        let d = new Date(blk.start_date);
+        const end = new Date(blk.end_date);
+        while (d <= end) {
+          dates.push({
+            date: d.toISOString().slice(0, 10),
+            label: blk.reason || 'Bloqué',
+            type: 'vacation',
+          });
+          d.setDate(d.getDate() + 1);
+        }
+        return dates;
+      });
+
+      setEvents([...bookingEvents, ...blockEvents]);
+      setWorkload(res.workload ?? 0);
+    } catch (err) {
+      console.error(err);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [year, month]);
+
+  const loadWorkingHours = useCallback(async () => {
+    try {
+      const res = await api.get('caterer/working-hours');
+      if (res.length === 7) {
+        setWorkingHours(res);
+      } else {
+        // valeurs par défaut si pas encore configurées
+        setWorkingHours(
+          [1, 2, 3, 4, 5, 6, 7].map((day) => ({
+            day_of_week: day,
+            is_open: day !== 7,
+            start_time: day === 7 ? null : '08:00',
+            end_time: day === 7 ? null : day === 6 ? '22:00' : '18:00',
+          }))
+        );
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCalendar();
+  }, [loadCalendar]);
+
+  useEffect(() => {
+    loadWorkingHours();
+  }, [loadWorkingHours]);
+
+  const handleBlockDates = async () => {
+    const startDate = prompt('Date de début (AAAA-MM-JJ) :');
+    if (!startDate) return;
+    const endDate = prompt('Date de fin (AAAA-MM-JJ) :', startDate);
+    if (!endDate) return;
+    const reason = prompt('Raison du blocage :') ?? '';
+
+    try {
+      await api.post('caterer/availability/block', {
+        start_date: startDate,
+        end_date: endDate,
+        reason,
+      });
+      loadCalendar();
+    } catch (err) {
+      console.error(err);
+      alert("Une erreur est survenue lors du blocage. Vérifiez le format des dates (AAAA-MM-JJ).");
+    }
+  };
+
+  const handleHourChange = (day: number, field: keyof WorkingHourItem, value: any) => {
+    setWorkingHours((prev) =>
+      prev.map((h) => (h.day_of_week === day ? { ...h, [field]: value } : h))
+    );
+  };
+
+  const handleSaveHours = async () => {
+    setSavingHours(true);
+    try {
+      await api.put('caterer/working-hours', { hours: workingHours });
+      setHoursModalOpen(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingHours(false);
     }
   };
 
@@ -96,8 +196,12 @@ export default function Calendar() {
   };
 
   const upcomingEvents = events
-    .filter((e) => e.date >= formatDateKey(today.getFullYear(), today.getMonth(), today.getDate()))
+    .filter((e) => e.date >= formatDateKey(today.getFullYear(), today.getMonth(), today.getDate()) && e.type !== 'vacation')
+    .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 3);
+
+  const openDays = workingHours.filter((h) => h.is_open);
+  const closedDays = workingHours.filter((h) => !h.is_open);
 
   return (
     <div>
@@ -121,9 +225,7 @@ export default function Calendar() {
                 key={v}
                 onClick={() => setView(v)}
                 className={`px-4 py-2 text-sm font-bold rounded-md transition-colors ${
-                  view === v
-                    ? 'bg-[#bc4733]/20 text-[#872111]'
-                    : 'text-[#58423d] hover:bg-[#ede7e0]'
+                  view === v ? 'bg-[#bc4733]/20 text-[#872111]' : 'text-[#58423d] hover:bg-[#ede7e0]'
                 }`}
               >
                 {v === 'month' ? 'Mois' : v === 'week' ? 'Semaine' : 'Agenda'}
@@ -160,7 +262,6 @@ export default function Calendar() {
         </p>
       )}
 
-      {/* Disposition principale */}
       <div className="grid grid-cols-12 gap-6">
         {/* Calendrier */}
         <div className="col-span-12 lg:col-span-9">
@@ -173,50 +274,54 @@ export default function Calendar() {
               ))}
             </div>
 
-            <div className="grid grid-cols-7">
-              {cells.map((cell, i) => {
-                const dayEvents = cell.currentMonth ? eventsForDay(cell.dateKey) : [];
-                const todayCell = cell.currentMonth && isToday(cell.dateKey);
-                const vacationDay = dayEvents.some((e) => e.type === 'vacation');
+            {loading ? (
+              <div className="p-10 text-center text-[#58423d]">Chargement du calendrier...</div>
+            ) : (
+              <div className="grid grid-cols-7">
+                {cells.map((cell, i) => {
+                  const dayEvents = cell.currentMonth ? eventsForDay(cell.dateKey) : [];
+                  const todayCell = cell.currentMonth && isToday(cell.dateKey);
+                  const vacationDay = dayEvents.some((e) => e.type === 'vacation');
 
-                return (
-                  <div
-                    key={i}
-                    className={`min-h-[110px] p-2 border-r border-b border-[#dfc0ba] transition-colors ${
-                      !cell.currentMonth
-                        ? 'bg-[#e7e2db]/20 text-[#8b716c] opacity-40'
-                        : vacationDay
-                        ? 'bg-[#e7e2db]'
-                        : todayCell
-                        ? 'bg-[#bc4733]/5 border-2 border-[#9b2f1e]'
-                        : 'hover:bg-[#f9f3ec] cursor-pointer'
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <span className={`text-sm ${todayCell ? 'font-bold text-[#9b2f1e]' : 'font-medium'}`}>
-                        {cell.day}
-                      </span>
-                      {todayCell && <span className="w-2 h-2 rounded-full bg-[#9b2f1e] animate-pulse" />}
-                      {vacationDay && <Plane className="w-4 h-4 text-[#8b716c]" strokeWidth={1.75} />}
-                    </div>
-                    {todayCell && <p className="text-[10px] mt-1 font-bold text-[#9b2f1e]">Aujourd'hui</p>}
+                  return (
+                    <div
+                      key={i}
+                      className={`min-h-[110px] p-2 border-r border-b border-[#dfc0ba] transition-colors ${
+                        !cell.currentMonth
+                          ? 'bg-[#e7e2db]/20 text-[#8b716c] opacity-40'
+                          : vacationDay
+                          ? 'bg-[#e7e2db]'
+                          : todayCell
+                          ? 'bg-[#bc4733]/5 border-2 border-[#9b2f1e]'
+                          : 'hover:bg-[#f9f3ec] cursor-pointer'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <span className={`text-sm ${todayCell ? 'font-bold text-[#9b2f1e]' : 'font-medium'}`}>
+                          {cell.day}
+                        </span>
+                        {todayCell && <span className="w-2 h-2 rounded-full bg-[#9b2f1e] animate-pulse" />}
+                        {vacationDay && <Plane className="w-4 h-4 text-[#8b716c]" strokeWidth={1.75} />}
+                      </div>
+                      {todayCell && <p className="text-[10px] mt-1 font-bold text-[#9b2f1e]">Aujourd&apos;hui</p>}
 
-                    <div className="mt-1 space-y-1">
-                      {dayEvents
-                        .filter((e) => e.type !== 'vacation')
-                        .map((e, idx) => (
-                          <div
-                            key={idx}
-                            className={`text-[10px] p-1 rounded font-bold truncate ${eventTypeStyles[e.type]}`}
-                          >
-                            {e.label}
-                          </div>
-                        ))}
+                      <div className="mt-1 space-y-1">
+                        {dayEvents
+                          .filter((e) => e.type !== 'vacation')
+                          .map((e, idx) => (
+                            <div
+                              key={idx}
+                              className={`text-[10px] p-1 rounded font-bold truncate ${eventTypeStyles[e.type]}`}
+                            >
+                              {e.label}
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -226,7 +331,7 @@ export default function Calendar() {
           <div className="bg-white p-4 rounded-xl border border-[#dfc0ba] shadow-sm flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-[#58423d] uppercase tracking-widest">Charge du mois</p>
-              <h3 className="text-2xl font-bold text-[#9b2f1e]">68%</h3>
+              <h3 className="text-2xl font-bold text-[#9b2f1e]">{workload}%</h3>
             </div>
             <div className="w-12 h-12 rounded-full bg-[#ffb961]/20 flex items-center justify-center">
               <Clock className="w-5 h-5 text-[#7a4b00]" strokeWidth={1.75} />
@@ -239,21 +344,33 @@ export default function Calendar() {
               <Clock className="w-4 h-4 text-[#9b2f1e]" strokeWidth={1.75} />
               Horaires habituels
             </h4>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-[#58423d]">Lun - Ven</span>
-                <span className="font-bold">08:00 - 18:00</span>
+
+            {workingHours.length === 0 ? (
+              <p className="text-sm text-[#58423d]">Chargement...</p>
+            ) : (
+              <div className="space-y-2">
+                {workingHours
+                  .slice()
+                  .sort((a, b) => a.day_of_week - b.day_of_week)
+                  .map((h) => (
+                    <div key={h.day_of_week} className="flex justify-between items-center text-sm">
+                      <span className="text-[#58423d]">{DAY_LABELS[h.day_of_week]}</span>
+                      {h.is_open ? (
+                        <span className="font-bold">
+                          {h.start_time?.slice(0, 5)} - {h.end_time?.slice(0, 5)}
+                        </span>
+                      ) : (
+                        <span className="text-red-600 font-bold">Fermé</span>
+                      )}
+                    </div>
+                  ))}
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-[#58423d]">Samedi</span>
-                <span className="font-bold">10:00 - 22:00</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-[#58423d]">Dimanche</span>
-                <span className="text-red-600 font-bold">Fermé</span>
-              </div>
-            </div>
-            <button className="w-full mt-4 text-[#9b2f1e] text-sm font-bold flex items-center justify-center gap-1 hover:underline">
+            )}
+
+            <button
+              onClick={() => setHoursModalOpen(true)}
+              className="w-full mt-4 text-[#9b2f1e] text-sm font-bold flex items-center justify-center gap-1 hover:underline"
+            >
               Modifier les horaires <ArrowRight className="w-4 h-4" strokeWidth={1.75} />
             </button>
           </div>
@@ -285,7 +402,7 @@ export default function Calendar() {
           {/* Blocage rapide */}
           <div className="rounded-xl bg-[#bc4733] p-4 text-white relative overflow-hidden">
             <div className="relative z-10">
-              <h4 className="font-bold mb-1">Besoin d'une pause ?</h4>
+              <h4 className="font-bold mb-1">Besoin d&apos;une pause ?</h4>
               <p className="text-xs mb-3 opacity-90">
                 Bloquez un week-end ou une période pour maintenance ou congés.
               </p>
@@ -300,6 +417,87 @@ export default function Calendar() {
           </div>
         </div>
       </div>
+
+      {/* Modal de modification des horaires */}
+      {hoursModalOpen && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setHoursModalOpen(false);
+          }}
+        >
+          <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl">
+            <div className="p-6 border-b border-[#dfc0ba] flex justify-between items-center">
+              <h3 className="text-xl font-bold text-[#1d1b17]">Horaires habituels</h3>
+              <button
+                onClick={() => setHoursModalOpen(false)}
+                className="p-2 hover:bg-[#ede7e0] rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" strokeWidth={1.75} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+              {workingHours
+                .slice()
+                .sort((a, b) => a.day_of_week - b.day_of_week)
+                .map((h) => (
+                  <div key={h.day_of_week} className="flex items-center gap-3">
+                    <span className="w-24 text-sm font-semibold text-[#1d1b17] shrink-0">
+                      {DAY_LABELS[h.day_of_week]}
+                    </span>
+
+                    <label className="flex items-center gap-2 shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={h.is_open}
+                        onChange={(e) => handleHourChange(h.day_of_week, 'is_open', e.target.checked)}
+                        className="rounded border-[#dfc0ba] text-[#9b2f1e] focus:ring-[#9b2f1e]"
+                      />
+                      <span className="text-xs text-[#58423d]">Ouvert</span>
+                    </label>
+
+                    {h.is_open ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          type="time"
+                          value={h.start_time ?? '08:00'}
+                          onChange={(e) => handleHourChange(h.day_of_week, 'start_time', e.target.value)}
+                          className="border border-[#dfc0ba] rounded-lg px-2 py-1 text-sm flex-1"
+                        />
+                        <span className="text-[#58423d]">-</span>
+                        <input
+                          type="time"
+                          value={h.end_time ?? '18:00'}
+                          onChange={(e) => handleHourChange(h.day_of_week, 'end_time', e.target.value)}
+                          className="border border-[#dfc0ba] rounded-lg px-2 py-1 text-sm flex-1"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-sm text-[#8b716c] italic flex-1">Fermé</span>
+                    )}
+                  </div>
+                ))}
+            </div>
+
+            <div className="p-6 border-t border-[#dfc0ba] flex justify-end gap-3">
+              <button
+                onClick={() => setHoursModalOpen(false)}
+                className="px-4 py-2 text-sm font-semibold text-[#58423d] hover:bg-[#ede7e0] rounded-full transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSaveHours}
+                disabled={savingHours}
+                className="px-6 py-2 bg-[#9b2f1e] text-white rounded-full text-sm font-semibold hover:bg-[#872111] transition-colors disabled:opacity-50"
+              >
+                {savingHours ? 'Enregistrement...' : 'Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

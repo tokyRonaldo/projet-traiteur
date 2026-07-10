@@ -11,4 +11,8 @@ class Quote extends Model
         
     protected $guarded = ['id']; 
 
+    // app/Models/Quote.php
+    public function eventRequest() { return $this->belongsTo(EventRequest::class); }
+    public function caterer() { return $this->belongsTo(Caterer::class); }
+
 }

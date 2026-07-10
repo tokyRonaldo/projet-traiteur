@@ -11,4 +11,9 @@ class Review extends Model
         
     protected $guarded = ['id']; 
 
+    // app/Models/Review.php
+    public function user() { return $this->belongsTo(User::class); }
+    public function caterer() { return $this->belongsTo(Caterer::class); }
+    public function service() { return $this->belongsTo(Service::class); }
+
 }

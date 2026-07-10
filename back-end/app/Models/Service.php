@@ -11,4 +11,20 @@ class Service extends Model
         
     protected $guarded = ['id']; 
 
+     /**
+     * Le service appartient à une catégorie.
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * Le service appartient à un traiteur.
+     */
+    public function caterer()
+    {
+        return $this->belongsTo(Caterer::class);
+    }
+
 }
