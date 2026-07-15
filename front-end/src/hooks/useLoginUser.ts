@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthService } from './useAuthService';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -13,6 +14,7 @@ export function useLoginUser() {
   const [error, setError] = useState<string | null>(null);
   const {saveAuthentication} = useAuthService();
   const router = useRouter()
+  const searchParams = useSearchParams();
 
   const login = async (data: { email: string; password: string }) => {
     setIsLoading(true);
@@ -43,6 +45,12 @@ export function useLoginUser() {
 
       }
       else if(result.role == 'client'){
+        const redirect = searchParams.get("redirect");
+        if(redirect){
+            router.push(redirect);
+        }else{
+            router.push("/client/dashboard");
+        }
         router.push('/client/dashboard');
       }
       else{

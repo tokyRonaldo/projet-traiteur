@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Caterer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Quote;
+use App\Models\User;
 use App\Models\Booking;
 use App\Models\EventRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+
 
 class CatererQuoteController extends Controller
 {
@@ -59,6 +62,67 @@ class CatererQuoteController extends Controller
             'sent_at' => now(),
         ]);
 
+        $client = User::find($eventRequest->client_id);
+
+        // URL frontend
+        $urlAccepted = config('app.frontend_url')
+            ."/client/quote/".$quote->id."/accept";
+
+
+        $urlRejected = config('app.frontend_url')
+            ."/client/quote/".$quote->id."/reject";
+
+        $resp = Http::post(
+                'http://localhost:5678/webhook-test/send-devis',
+                [
+
+                    'caterer' => [
+                        'id' => $caterer->id,
+                        'name' => $caterer->name,
+                    ],
+
+
+                    'client' => [
+                        'id' => $client->id,
+                        'name' => $client->name,
+                        'email' => $client->email,
+                    ],
+
+
+                    'event_request' => [
+                        'id' => $eventRequest->id,
+                        'event_type' => $eventRequest->event_type,
+                        'event_date' => $eventRequest->event_date,
+                        'guests_number' => $eventRequest->guests_number,
+                    ],
+
+
+                    'quote' => [
+                        'id' => $quote->id,
+                        'price' => $quote->proposed_price,
+                        'message' => $quote->message,
+                    ],
+
+
+                    'url_accepted' => $urlAccepted,
+
+                    'url_rejected' => $urlRejected,
+
+                ]
+            );
+
+        // 🔥 vérifier si n8n a répondu correctement
+        if (!$resp->successful()) {
+            return response()->json([
+                'status' => 500,
+                'msg' => 'Erreur webhook n8n',
+                'error' => $resp->body()
+            ], 500);
+        }
+
+
+
+
         $eventRequest->update(['status' => 'responded']);
 
         return response()->json([
@@ -67,12 +131,18 @@ class CatererQuoteController extends Controller
         ], 201);
     }
 
-    // PUT caterer/quote/update/{id}
+    // CatererQuoteController.php — méthode update()
     public function update(Request $request, $id)
     {
         $caterer = $request->user()->caterer;
 
         $quote = Quote::where('caterer_id', $caterer->id)->findOrFail($id);
+
+        if ($quote->status !== 'sent') {
+            return response()->json([
+                'message' => 'Seuls les devis en attente de réponse peuvent être modifiés.',
+            ], 422);
+        }
 
         $validated = $request->validate([
             'proposed_price' => 'required|numeric|min:0',
@@ -84,17 +154,22 @@ class CatererQuoteController extends Controller
         return response()->json(['message' => 'Devis mis à jour', 'quote' => $quote->fresh()]);
     }
 
-    // DELETE caterer/quote/delete/{id}
+    // méthode destroy()
     public function destroy(Request $request, $id)
     {
         $caterer = $request->user()->caterer;
         $quote = Quote::where('caterer_id', $caterer->id)->findOrFail($id);
+
+        if ($quote->status !== 'sent') {
+            return response()->json([
+                'message' => 'Seuls les devis en attente de réponse peuvent être retirés.',
+            ], 422);
+        }
+
         $quote->delete();
 
-        return response()->json(['message' => 'Devis supprimé']);
+        return response()->json(['message' => 'Devis retiré']);
     }
-
-
 
 
 
@@ -115,9 +190,22 @@ class CatererQuoteController extends Controller
             'title' => $quote->eventRequest->event_type,
             'event_date' => $quote->eventRequest->event_date,
             'guests_number' => $quote->eventRequest->guests_number,
+            'price' => $quote->proposed_price,
             'status' => 'confirmed',
         ]);
 
         return response()->json(['message' => 'Devis accepté, réservation créée']);
     }
+
+    public function reject(Quote $quote)
+{
+    $quote->update([
+        'status'=>'rejected',
+    ]);
+
+
+    return response()->json([
+        'message'=>'Devis refusé'
+    ]);
+}
 }

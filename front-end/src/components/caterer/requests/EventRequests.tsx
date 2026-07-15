@@ -16,11 +16,14 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import QuoteCreateModal from '../quotes/QuoteCreateModal';
 
 interface EventRequestItem {
   id: number;
-  client_name: string;
-  client_location: string;
+  client:{
+    name : string,
+    phone : string
+  };
   event_type: string;
   event_date: string;
   guests_number: number;
@@ -50,6 +53,7 @@ export default function EventRequests() {
   const [selected, setSelected] = useState<EventRequestItem | null>(null);
   const [page, setPage] = useState(1);
   const perPage = 4;
+  const [quoteModalRequest, setQuoteModalRequest] = useState<EventRequestItem | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -71,7 +75,7 @@ export default function EventRequests() {
   const filtered = useMemo(() => {
     return requests.filter((r) => {
       const matchStatus = !statusFilter || r.status === statusFilter;
-      const matchSearch = r.client_name.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = r.client?.name.toLowerCase().includes(search.toLowerCase());
       return matchStatus && matchSearch;
     });
   }, [requests, statusFilter, search]);
@@ -228,11 +232,11 @@ export default function EventRequests() {
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-[#dae1e3] flex items-center justify-center text-[#586062] font-bold text-xs">
-                        {getInitials(r.client_name)}
+                        {getInitials(r.client?.name)}
                       </div>
                       <div>
-                        <p className="font-bold text-sm">{r.client_name}</p>
-                        <p className="text-xs text-[#58423d]">{r.client_location}</p>
+                        <p className="font-bold text-sm">{r.client?.name}</p>
+                        <p className="text-xs text-[#58423d]">{r.client?.phone}</p>
                       </div>
                     </div>
                   </td>
@@ -330,7 +334,7 @@ export default function EventRequests() {
                 <span className="text-[#9b2f1e] text-xs font-semibold uppercase tracking-widest block mb-1">
                   Demande #{selected.id}
                 </span>
-                <h2 className="text-2xl font-bold text-[#1d1b17]">{selected.client_name}</h2>
+                <h2 className="text-2xl font-bold text-[#1d1b17]">{selected.client?.name}</h2>
               </div>
               <button
                 onClick={() => setSelected(null)}
@@ -352,7 +356,7 @@ export default function EventRequests() {
                 </div>
                 <div>
                   <p className="text-[#58423d] text-xs font-bold uppercase">Lieu</p>
-                  <p>{selected.client_location}</p>
+                  <p>{selected.client?.phone}</p>
                 </div>
                 <div>
                   <p className="text-[#58423d] text-xs font-bold uppercase">Budget</p>
@@ -367,20 +371,22 @@ export default function EventRequests() {
                 </div>
               </div>
 
-              <div>
-                <p className="text-[#58423d] text-xs font-bold uppercase mb-2">Actions rapides</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button className="bg-[#9b2f1e] text-white py-4 rounded-xl font-bold flex flex-col items-center gap-1 hover:bg-[#872111] transition-all">
-                    <Send className="w-5 h-5" strokeWidth={1.75} />
-                    Envoyer un devis
-                  </button>
-                  <button className="bg-white border-2 border-[#9b2f1e] text-[#9b2f1e] py-4 rounded-xl font-bold flex flex-col items-center gap-1 hover:bg-[#9b2f1e]/5 transition-all">
-                    <MessageCircle className="w-5 h-5" strokeWidth={1.75} />
-                    Contacter le client
-                  </button>
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setQuoteModalRequest(selected)}
+                  className="bg-[#9b2f1e] text-white py-4 rounded-xl font-bold flex flex-col items-center gap-1 hover:bg-[#872111] transition-all"
+                >
+                  <Send className="w-5 h-5" strokeWidth={1.75} />
+                  Envoyer un devis
+                </button>
+                <Link
+                  href={`/caterer/messages?client=${selected.id}`}
+                  className="bg-white border-2 border-[#9b2f1e] text-[#9b2f1e] py-4 rounded-xl font-bold flex flex-col items-center gap-1 hover:bg-[#9b2f1e]/5 transition-all"
+                >
+                  <MessageCircle className="w-5 h-5" strokeWidth={1.75} />
+                  Contacter le client
+                </Link>
               </div>
-
               <div className="p-4 rounded-xl border border-[#dfc0ba] space-y-2">
                 <div className="flex items-center gap-2">
                   <History className="w-4 h-4 text-[#9b2f1e]" strokeWidth={1.75} />
@@ -392,14 +398,16 @@ export default function EventRequests() {
                     <p className="text-xs text-[#58423d]">
                       {new Date(selected.created_at).toLocaleString('fr-FR')}
                     </p>
-                    <p>Demande reçue de {selected.client_name}</p>
+                    <p>Demande reçue de {selected.client?.name}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="p-6 bg-white border-t border-[#dfc0ba] flex gap-3">
-              <button className="flex-1 bg-[#e7e2db] text-[#58423d] py-2 rounded-full font-bold hover:bg-[#dfc0ba] transition-colors">
+              <button className="flex-1 bg-[#e7e2db] text-[#58423d] py-2 rounded-full font-bold hover:bg-[#dfc0ba] transition-colors"
+              onClick={()=>{setSelected(null)}}
+              >
                 Ignorer
               </button>
               <button className="flex-1 bg-[#586062] text-white py-2 rounded-full font-bold hover:opacity-90 transition-opacity">
@@ -408,6 +416,32 @@ export default function EventRequests() {
             </div>
           </div>
         </div>
+      )}
+      {quoteModalRequest && (
+        <QuoteCreateModal
+          eventRequest={{
+            id: quoteModalRequest.id,
+            client_name: quoteModalRequest.client?.name,
+            event_type: quoteModalRequest.event_type,
+            event_date: quoteModalRequest.event_date,
+            guests_number: quoteModalRequest.guests_number,
+            budget: quoteModalRequest.budget,
+            message: quoteModalRequest.message,
+          }}
+          onClose={() => setQuoteModalRequest(null)}
+          onSent={() => {
+            // Recharge la liste pour refléter le nouveau statut "responded"
+            setLoading(true);
+            api
+              .get('caterer/event-requests')
+              .then((res) => setRequests(res.data ?? res))
+              .finally(() => {
+                setLoading(false)
+                setSelected(null);
+              }
+              );
+          }}
+        />
       )}
     </div>
   );

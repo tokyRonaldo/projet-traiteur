@@ -59,6 +59,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
+Route::middleware(['auth:sanctum'])->group(function () {
+
+    Route::post(
+        '/client/quotes/{quote}/accept',
+        [CatererQuoteController::class,'accept']
+    );
+
+
+    Route::post(
+        '/client/quotes/{quote}/reject',
+        [CatererQuoteController::class,'reject']
+    );
+
+
+});
+
 
 Route::middleware(['auth:sanctum', 'role:traiteur'])->prefix('caterer')->group(function () {
     Route::get('profile', [CatererProfileController::class, 'show']);

@@ -8,42 +8,45 @@ import {
   CheckCircle2,
   FileText,
   Banknote,
-  MoreVertical,
   Pencil,
+  Trash2,
+  CalendarCheck,
   ReceiptText,
   ImageOff,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import QuoteEditModal from './QuoteEditModal';
 
 interface QuoteItem {
   id: number;
   event_title: string;
-  client_name: string;
-  event_date: string;
+  event_request: {
+    client: { name: string };
+    event_date: string;
+    guests_number: number;
+    event_type: string;
+  };
   proposed_price: number;
-  guests_number: number;
-  service_type: string;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected';
+  message?: string;
+  status: 'sent' | 'accepted' | 'rejected';
   rejection_reason?: string;
   updated_at: string;
 }
 
 const TABS = [
   { key: 'all', label: 'Tous les devis' },
-  { key: 'draft', label: 'Brouillons' },
   { key: 'sent', label: 'Envoyés' },
   { key: 'accepted', label: 'Acceptés' },
+  { key: 'rejected', label: 'Refusés' },
 ];
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Brouillon',
   sent: 'Envoyé',
   accepted: 'Accepté',
   rejected: 'Refusé',
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-[#e7e2db] text-[#58423d]',
   sent: 'bg-[#ffb4a6] text-[#872111]',
   accepted: 'bg-[#ffddb9] text-[#663e00]',
   rejected: 'bg-[#ffdad6] text-[#93000a]',
@@ -54,14 +57,19 @@ export default function Quotes() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [visibleCount, setVisibleCount] = useState(4);
+  const [editingQuote, setEditingQuote] = useState<QuoteItem | null>(null);
 
-  useEffect(() => {
+  const loadQuotes = () => {
     setLoading(true);
     api
-      .get('caterer/quotes') // adapte à ta vraie route
+      .get('caterer/quotes')
       .then((res) => setQuotes(res.data ?? res))
       .catch(() => setQuotes([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadQuotes();
   }, []);
 
   const filtered = useMemo(() => {
@@ -74,16 +82,26 @@ export default function Quotes() {
   const counts = {
     sent: quotes.filter((q) => q.status === 'sent').length,
     accepted: quotes.filter((q) => q.status === 'accepted').length,
-    draft: quotes.filter((q) => q.status === 'draft').length,
-    pipeline: quotes
-      .filter((q) => q.status === 'sent' || q.status === 'draft')
-      .reduce((sum, q) => sum + q.proposed_price, 0),
+    rejected: quotes.filter((q) => q.status === 'rejected').length,
+    pipeline: quotes.filter((q) => q.status === 'sent').reduce((sum, q) => sum + q.proposed_price, 0),
   };
 
   const conversionRate =
     counts.sent + counts.accepted > 0
       ? Math.round((counts.accepted / (counts.sent + counts.accepted)) * 100)
       : 0;
+
+  const handleWithdraw = async (quote: QuoteItem) => {
+    if (!confirm('Retirer ce devis ? Le client ne pourra plus y répondre.')) return;
+
+    setQuotes((prev) => prev.filter((q) => q.id !== quote.id));
+    try {
+      await api.delete(`caterer/quote/delete/${quote.id}`);
+    } catch (err: any) {
+      alert(err.message || 'Impossible de retirer ce devis.');
+      loadQuotes();
+    }
+  };
 
   return (
     <div>
@@ -93,17 +111,12 @@ export default function Quotes() {
           <h2 className="text-3xl font-bold text-[#1d1b17]">Gestion des devis</h2>
           <p className="text-[#58423d] mt-1">Suivez et gérez vos propositions de service.</p>
         </div>
-        <div className="flex gap-3">
-          <Link
-            href="/caterer/statistics"
-            className="px-4 py-2 border-2 border-[#9b2f1e] text-[#9b2f1e] rounded-full font-bold hover:bg-[#9b2f1e]/5 transition-all"
-          >
-            Voir les statistiques
-          </Link>
-          <button className="px-4 py-2 bg-[#9b2f1e] text-white rounded-full font-bold shadow-md hover:-translate-y-0.5 transition-all">
-            Créer un devis
-          </button>
-        </div>
+        <Link
+          href="/caterer/statistics"
+          className="px-4 py-2 border-2 border-[#9b2f1e] text-[#9b2f1e] rounded-full font-bold hover:bg-[#9b2f1e]/5 transition-all"
+        >
+          Voir les statistiques
+        </Link>
       </div>
 
       {/* Cartes statistiques */}
@@ -135,10 +148,10 @@ export default function Quotes() {
             <span className="text-[#586062] bg-[#dde4e6] p-2 rounded-lg">
               <FileText className="w-4 h-4" strokeWidth={1.75} />
             </span>
-            <span className="text-xs text-[#58423d]">Brouillons</span>
+            <span className="text-xs text-[#58423d]">Refusés</span>
           </div>
-          <p className="text-2xl font-bold">{counts.draft}</p>
-          <p className="text-xs text-[#58423d] mt-1">En attente de détails</p>
+          <p className="text-2xl font-bold">{counts.rejected}</p>
+          <p className="text-xs text-[#58423d] mt-1">Non retenus par le client</p>
         </div>
 
         <div className="bg-white/70 backdrop-blur-sm border border-[#dfc0ba] p-4 rounded-xl flex flex-col justify-between">
@@ -146,10 +159,10 @@ export default function Quotes() {
             <span className="text-[#9b2f1e] bg-[#ffdad4] p-2 rounded-lg">
               <Banknote className="w-4 h-4" strokeWidth={1.75} />
             </span>
-            <span className="text-xs text-[#58423d]">Pipeline total</span>
+            <span className="text-xs text-[#58423d]">Pipeline en attente</span>
           </div>
           <p className="text-2xl font-bold">{counts.pipeline.toLocaleString()} €</p>
-          <p className="text-xs text-[#58423d] mt-1">En attente d'approbation</p>
+          <p className="text-xs text-[#58423d] mt-1">En attente de réponse client</p>
         </div>
       </div>
 
@@ -189,9 +202,7 @@ export default function Quotes() {
         {visible.map((quote) => (
           <div
             key={quote.id}
-            className={`bg-white/70 backdrop-blur-sm border border-[#dfc0ba] p-4 rounded-xl flex items-center justify-between hover:shadow-lg hover:-translate-y-0.5 transition-all group cursor-pointer ${
-              quote.status === 'draft' ? 'border-dashed opacity-90' : ''
-            }`}
+            className="bg-white/70 backdrop-blur-sm border border-[#dfc0ba] p-4 rounded-xl flex items-center justify-between hover:shadow-lg transition-all group"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-[#f3ede6] flex items-center justify-center shrink-0">
@@ -199,21 +210,22 @@ export default function Quotes() {
               </div>
               <div>
                 <h4 className="font-bold text-[#1d1b17] group-hover:text-[#9b2f1e] transition-colors">
-                  {quote.event_title}
+                  {quote.event_request?.event_type}
                 </h4>
                 <p className="text-xs text-[#58423d] uppercase tracking-wider">
-                  Client : {quote.client_name} • {new Date(quote.event_date).toLocaleDateString('fr-FR')}
+                  Client : {quote.event_request?.client?.name} •{' '}
+                  {new Date(quote.event_request?.event_date).toLocaleDateString('fr-FR')}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-6">
               <div className="text-right">
                 <p className="text-xl font-bold text-[#9b2f1e]">
                   {quote.proposed_price.toLocaleString()} €
                 </p>
                 <p className="text-xs text-[#58423d]">
-                  {quote.guests_number} invités • {quote.service_type}
+                  {quote.event_request?.guests_number} invités
                 </p>
               </div>
 
@@ -228,13 +240,39 @@ export default function Quotes() {
                 </p>
               </div>
 
-              <button className="p-2 text-[#58423d] hover:text-[#9b2f1e] transition-colors">
-                {quote.status === 'draft' ? (
-                  <Pencil className="w-4 h-4" strokeWidth={1.75} />
-                ) : (
-                  <MoreVertical className="w-4 h-4" strokeWidth={1.75} />
+              {/* Actions selon le statut */}
+              <div className="flex items-center gap-1 shrink-0">
+                {quote.status === 'sent' && (
+                  <>
+                    <button
+                      onClick={() => setEditingQuote(quote)}
+                      className="p-2 text-[#58423d] hover:text-[#9b2f1e] hover:bg-[#9b2f1e]/10 rounded-full transition-colors"
+                      title="Modifier le devis"
+                    >
+                      <Pencil className="w-4 h-4" strokeWidth={1.75} />
+                    </button>
+                    <button
+                      onClick={() => handleWithdraw(quote)}
+                      className="p-2 text-[#58423d] hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                      title="Retirer le devis"
+                    >
+                      <Trash2 className="w-4 h-4" strokeWidth={1.75} />
+                    </button>
+                  </>
                 )}
-              </button>
+
+                {quote.status === 'accepted' && (
+                  <Link
+                    href="/caterer/bookings"
+                    className="p-2 text-[#7a4b00] hover:bg-[#ffddb9]/40 rounded-full transition-colors"
+                    title="Voir la réservation"
+                  >
+                    <CalendarCheck className="w-4 h-4" strokeWidth={1.75} />
+                  </Link>
+                )}
+
+                {/* rejected → aucune action, juste consultable */}
+              </div>
             </div>
           </div>
         ))}
@@ -253,6 +291,14 @@ export default function Quotes() {
             Charger plus de devis
           </button>
         </div>
+      )}
+
+      {editingQuote && (
+        <QuoteEditModal
+          quote={editingQuote}
+          onClose={() => setEditingQuote(null)}
+          onSaved={loadQuotes}
+        />
       )}
     </div>
   );

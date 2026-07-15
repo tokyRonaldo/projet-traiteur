@@ -11,4 +11,9 @@ class Subscription extends Model
         
     protected $guarded = ['id']; 
 
+    public function caterer()
+    {
+        return $this->belongsTo(Caterer::class);
+    }
+
 }

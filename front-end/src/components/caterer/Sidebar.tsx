@@ -97,12 +97,6 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <Link
-        href="/caterer/quotes/new"
-        className="mt-6 block text-center w-full bg-orange-600 text-white py-2 rounded-full hover:bg-orange-700 transition-colors"
-      >
-        Nouveau devis
-      </Link>
     </aside>
   );
 }

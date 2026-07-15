@@ -13,7 +13,7 @@ class CatererBookingController extends Controller
     {
         $caterer = $request->user()->caterer;
 
-        $query = Booking::where('caterer_id', $caterer->id)->with('client', 'quote');
+        $query = Booking::where('caterer_id', $caterer->id)->with('client', 'quote','quote.eventRequest');
 
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -39,7 +39,7 @@ class CatererBookingController extends Controller
     {
         $caterer = $request->user()->caterer;
 
-        $request->validate(['status' => 'required|in:confirmed,completed,cancelled']);
+        $request->validate(['status' => 'required|in:confirmed,cancelled']);
 
         $booking = Booking::where('caterer_id', $caterer->id)->findOrFail($id);
         $booking->update(['status' => $request->status]);
