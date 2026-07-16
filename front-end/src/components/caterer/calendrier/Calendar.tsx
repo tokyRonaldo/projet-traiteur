@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import BlockDatesModal from './BlockDatesModal';
 
 interface CalendarEvent {
   date: string;
@@ -60,6 +61,9 @@ export default function Calendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+
+  const [blockModalOpen, setBlockModalOpen] = useState(false);
 
   const cells = useMemo(() => {
     const result: { day: number; currentMonth: boolean; dateKey: string }[] = [];
@@ -118,6 +122,7 @@ export default function Calendar() {
       setEvents([]);
     } finally {
       setLoading(false);
+      setBlockModalOpen(false)
     }
   }, [year, month]);
 
@@ -125,7 +130,15 @@ export default function Calendar() {
     try {
       const res = await api.get('caterer/working-hours');
       if (res.length === 7) {
-        setWorkingHours(res);
+        console.log(res)
+        console.log('dfffres')
+        const formattedHours = res.map((h: WorkingHourItem) => ({
+          ...h,
+          start_time: h.start_time ? h.start_time.substring(0, 5) : "",
+          end_time: h.end_time ? h.end_time.substring(0, 5) : "",
+        }));
+
+        setWorkingHours(formattedHours);
       } else {
         // valeurs par défaut si pas encore configurées
         setWorkingHours(
@@ -247,7 +260,7 @@ export default function Calendar() {
             <ChevronRight className="w-5 h-5" strokeWidth={1.75} />
           </button>
           <button
-            onClick={handleBlockDates}
+            onClick={() => setBlockModalOpen(true)}
             className="bg-[#9b2f1e] text-white px-4 py-2 rounded-full font-bold text-sm flex items-center gap-1 hover:shadow-md transition-all active:scale-95"
           >
             <Ban className="w-4 h-4" strokeWidth={1.75} />
@@ -407,7 +420,7 @@ export default function Calendar() {
                 Bloquez un week-end ou une période pour maintenance ou congés.
               </p>
               <button
-                onClick={handleBlockDates}
+                onClick={() => setBlockModalOpen(true)}
                 className="bg-white text-[#9b2f1e] px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-[#f9f3ec] transition-all"
               >
                 Gérer les blocages
@@ -497,6 +510,12 @@ export default function Calendar() {
             </div>
           </div>
         </div>
+      )}
+      {blockModalOpen && (
+        <BlockDatesModal
+          onClose={() => setBlockModalOpen(false)}
+          onChanged={loadCalendar}
+        />
       )}
     </div>
   );

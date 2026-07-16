@@ -42,16 +42,28 @@ class CatererAvailabilityController extends Controller
         return response()->json(['message' => 'Horaires mis à jour']);
     }
 
-    // POST caterer/availability/block
+    // POST caterer/availability/block — validation renforcée
     public function block(Request $request)
     {
         $caterer = $request->user()->caterer;
 
         $validated = $request->validate([
-            'start_date' => 'required|date',
+            'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'nullable|string|max:255',
         ]);
+
+        // Empêche un blocage sur une date déjà réservée
+        $hasConflict = \App\Models\Booking::where('caterer_id', $caterer->id)
+            ->where('status', 'confirmed')
+            ->whereBetween('event_date', [$validated['start_date'], $validated['end_date']])
+            ->exists();
+
+        if ($hasConflict) {
+            return response()->json([
+                'message' => 'Cette période contient déjà une réservation confirmée. Vous ne pouvez pas la bloquer.',
+            ], 422);
+        }
 
         $block = Availability::create([
             ...$validated,
@@ -59,7 +71,7 @@ class CatererAvailabilityController extends Controller
             'is_blocked' => true,
         ]);
 
-        return response()->json(['message' => 'Période bloquée', 'block' => $block], 201);
+        return response()->json(['message' => 'Période bloquée avec succès', 'block' => $block], 201);
     }
 
     // DELETE caterer/availability/unblock/{id}

@@ -20,13 +20,13 @@ class CatererProfileController extends Controller
             return response()->json(['message' => 'Profil traiteur introuvable'], 404);
         }
 
-        $logo = Media::where('entity_type', 'caterer')
+        /*$logo = Media::where('entity_type', 'caterer')
             ->where('entity_id', $caterer->id)
             ->where('type', 'logo')
             ->first();
-
+        */
         $caterer->load('user');
-        $caterer->logo_url = $logo?->url;
+        $caterer->logo_url = $caterer->logo_url;
 
         return response()->json($caterer);
     }
@@ -79,34 +79,38 @@ class CatererProfileController extends Controller
 
         $caterer = $request->user()->caterer;
 
-        // Supprime l'ancien logo (fichier + entrée media) s'il existe
-        $existing = Media::where('entity_type', 'caterer')
-            ->where('entity_id', $caterer->id)
-            ->where('type', 'logo')
-            ->first();
+        // Supprimer l'ancien logo s'il existe
+        if ($caterer->logo_url) {
 
-        if ($existing) {
-            Storage::disk('public')->delete(str_replace('/storage/', '', $existing->url));
-            $existing->delete();
+            $oldPath = str_replace(
+                '/storage/',
+                '',
+                $caterer->logo_url
+            );
+
+            Storage::disk('public')->delete($oldPath);
         }
 
-        $path = $request->file('logo')->store('caterer-logos', 'public');
+
+        // Enregistrer le nouveau logo
+        $path = $request->file('logo')
+            ->store('caterer-logos', 'public');
+
+
         $url = Storage::url($path);
 
-        $media = Media::create([
-            'entity_type' => 'caterer',
-            'entity_id' => $caterer->id,
-            'url' => $url,
-            'type' => 'logo',
-            'position' => 0,
+
+        // Mettre à jour le caterer
+        $caterer->update([
+            'logo_url' => $url,
         ]);
+
 
         return response()->json([
             'message' => 'Logo mis à jour avec succès',
-            'logo_url' => $media->url,
+            'logo_url' => $url,
         ]);
     }
-
     public function updatePassword(Request $request)
     {
         $user = $request->user();
@@ -125,4 +129,63 @@ class CatererProfileController extends Controller
 
         return response()->json(['message' => 'Mot de passe mis à jour avec succès']);
     }
+
+    /*public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+
+
+        $validated = $request->validate([
+            'current_password' => [
+                'required',
+                'string'
+            ],
+
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed'
+            ],
+        ]);
+
+
+        // Vérifier l'ancien mot de passe
+        if (!Hash::check(
+            $validated['current_password'],
+            $user->password
+        )) {
+
+            return response()->json([
+                'message' => 'Le mot de passe actuel est incorrect.'
+            ], 422);
+
+        }
+
+
+        // Empêcher de remettre le même mot de passe
+        if (Hash::check(
+            $validated['new_password'],
+            $user->password
+        )) {
+
+            return response()->json([
+                'message' => 'Le nouveau mot de passe doit être différent de l’ancien.'
+            ], 422);
+
+        }
+
+
+        // Mise à jour
+        $user->update([
+            'password' => Hash::make(
+                $validated['new_password']
+            ),
+        ]);
+
+
+        return response()->json([
+            'message' => 'Mot de passe mis à jour avec succès.'
+        ]);
+    }*/
 }

@@ -80,6 +80,10 @@ Route::middleware(['auth:sanctum', 'role:traiteur'])->prefix('caterer')->group(f
     Route::get('profile', [CatererProfileController::class, 'show']);
     Route::put('profile', [CatererProfileController::class, 'update']);
     Route::post('profile/logo', [CatererProfileController::class, 'updateLogo']);
+    Route::put(
+        'profile/password',
+        [CatererProfileController::class, 'updatePassword']
+    );
 
     Route::get('services', [CatererServiceController::class, 'index']);
     Route::get('service/show/{id}', [CatererServiceController::class, 'show']);

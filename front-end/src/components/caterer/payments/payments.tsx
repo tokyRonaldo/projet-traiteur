@@ -20,8 +20,17 @@ import { api } from '@/lib/api';
 
 interface PaymentItem {
   id: number;
-  client_name: string;
-  event_type: string;
+  quote : {
+    event_request: {
+      client: { name: string };
+      event_date: string;
+      guests_number: number;
+      event_type: string;
+    };
+  }
+  user:{
+    name: string ;
+  }
   amount: number;
   status: 'completed' | 'pending' | 'cancelled';
   paid_at: string;
@@ -57,7 +66,12 @@ export default function Payments() {
     setLoading(true);
     api
       .get('caterer/payments') // adapte à ta vraie route
-      .then((res) => setPayments(res.data ?? res))
+      .then((res) => {
+        console.log('res')
+        console.log(res)
+        setPayments(res.data ?? res)
+      }
+      )
       .catch(() => setPayments([]))
       .finally(() => setLoading(false));
   }, []);
@@ -65,7 +79,7 @@ export default function Payments() {
   const filtered = useMemo(() => {
     return payments.filter((p) => {
       const matchStatus = !statusFilter || p.status === statusFilter;
-      const matchSearch = p.client_name.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = p.user?.name.toLowerCase().includes(search.toLowerCase());
       return matchStatus && matchSearch;
     });
   }, [payments, statusFilter, search]);
@@ -215,8 +229,8 @@ export default function Payments() {
               {paginated.map((p) => (
                 <tr key={p.id} className="hover:bg-[#f9f3ec] transition-colors group">
                   <td className="px-4 py-4">{new Date(p.paid_at).toLocaleDateString('fr-FR')}</td>
-                  <td className="px-4 py-4 font-bold">{p.client_name}</td>
-                  <td className="px-4 py-4 text-[#58423d]">{p.event_type}</td>
+                  <td className="px-4 py-4 font-bold">{p.user?.name}</td>
+                  <td className="px-4 py-4 text-[#58423d]">{p.quote?.event_request?.event_type}</td>
                   <td className="px-4 py-4 font-bold">{p.amount.toLocaleString()} €</td>
                   <td className="px-4 py-4">
                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLES[p.status]}`}>
