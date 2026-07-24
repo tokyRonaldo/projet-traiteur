@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Caterer;
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use Illuminate\Http\Request;
+use App\Models\Media;
+use Illuminate\Support\Facades\Storage;
 
 class CatererServiceController extends Controller
 {
@@ -25,7 +27,20 @@ class CatererServiceController extends Controller
 
         $services = $query->latest()->get();
 
-        return response()->json(['data' => $services]);
+        // Récupère l'image principale (position la plus basse) de chaque service en une seule requête
+        $serviceIds = $services->pluck('id');
+        $mediaByService = Media::where('entity_type', 'service')
+            ->whereIn('entity_id', $serviceIds)
+            ->orderBy('position')
+            ->get()
+            ->groupBy('entity_id');
+
+        $services->each(function ($service) use ($mediaByService) {
+            $firstMedia = $mediaByService->get($service->id)?->first();
+            $service->thumbnail_url = $firstMedia?->url;
+        });
+
+        return response()->json(['data' => $services]);    
     }
 
     // GET caterer/service/show/{id}
@@ -123,4 +138,63 @@ class CatererServiceController extends Controller
     {
         return response()->json(\App\Models\Category::orderBy('name')->get());
     }
+
+
+    // GET caterer/service/{id}/media
+    public function media(Request $request, $id)
+    {
+        $caterer = $request->user()->caterer;
+        $service = Service::where('caterer_id', $caterer->id)->findOrFail($id);
+
+        $media = Media::where('entity_type', 'service')
+            ->where('entity_id', $service->id)
+            ->orderBy('position')
+            ->get();
+
+        return response()->json($media);
+    }
+
+    // POST caterer/service/{id}/media
+    public function uploadMedia(Request $request, $id)
+    {
+        $caterer = $request->user()->caterer;
+        $service = Service::where('caterer_id', $caterer->id)->findOrFail($id);
+
+        $request->validate([
+            'file' => 'required|file|mimes:jpg,jpeg,png,webp,mp4|max:10240',
+        ]);
+
+        $file = $request->file('file');
+        $isVideo = str_starts_with($file->getMimeType(), 'video');
+        $path = $file->store('service-media', 'public');
+
+        $maxPosition = Media::where('entity_type', 'service')
+            ->where('entity_id', $service->id)
+            ->max('position') ?? 0;
+
+        $media = Media::create([
+            'entity_type' => 'service',
+            'entity_id' => $service->id,
+            'url' => Storage::url($path),
+            'type' => $isVideo ? 'video' : 'image',
+            'position' => $maxPosition + 1,
+        ]);
+
+        return response()->json(['message' => 'Photo ajoutée au service', 'media' => $media], 201);
+    }
+
+public function deleteMedia(Request $request, $mediaId)
+{
+    $caterer = $request->user()->caterer;
+
+    $media = Media::where('entity_type', 'service')->findOrFail($mediaId);
+
+    // Vérifie que le service appartient bien au traiteur connecté
+    Service::where('caterer_id', $caterer->id)->findOrFail($media->entity_id);
+
+    Storage::disk('public')->delete(str_replace('/storage/', '', $media->url));
+    $media->delete();
+
+    return response()->json(['message' => 'Photo supprimée']);
+}
 }

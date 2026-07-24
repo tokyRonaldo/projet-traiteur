@@ -30,9 +30,20 @@ use App\Http\Controllers\Caterer\{
     CatererNotificationController,
     CatererProfileController,
     CatererServiceController,
-    CatererDashboardController
+    CatererDashboardController,
+    CatererSearchController
 };
 
+use App\Http\Controllers\Client\ClientQuoteController;
+use App\Http\Controllers\Client\{
+    ClientCatererSearchController, 
+    ClientFavoriteController,
+    ClientReviewController,
+    ClientBookingController,
+    ClientMessageController,
+    ClientProfileController,
+    ClientEventRequestController
+    };
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +84,37 @@ Route::middleware(['auth:sanctum'])->group(function () {
     );
 
 
+});
+
+
+Route::middleware(['auth:sanctum', 'role:client'])->prefix('client')->group(function () {
+    Route::get('quotes', [ClientQuoteController::class, 'index']);
+    Route::post('quote/{id}/accept', [ClientQuoteController::class, 'accept']);
+    Route::post('quote/{id}/reject', [ClientQuoteController::class, 'reject']);
+
+    Route::get('caterers/search', [ClientCatererSearchController::class, 'index']);
+    Route::get('categories', [ClientCatererSearchController::class, 'categories']);
+    Route::post('favorites/toggle/{catererId}', [ClientFavoriteController::class, 'toggle']);
+    Route::get('caterer/{id}', [ClientCatererSearchController::class, 'show']);
+
+    Route::get('reviews', [ClientReviewController::class, 'index']);
+    Route::get('reviews/pending', [ClientReviewController::class, 'pending']);
+    Route::post('reviews/store', [ClientReviewController::class, 'store']);
+    
+    Route::get('bookings', [ClientBookingController::class, 'index']);
+    Route::get('booking/show/{id}', [ClientBookingController::class, 'show']);
+
+    Route::get('conversations', [ClientMessageController::class, 'conversations']);
+    Route::get('conversations/{partnerId}/messages', [ClientMessageController::class, 'messages']);
+    Route::post('conversations/{partnerId}/messages', [ClientMessageController::class, 'send']);
+
+    Route::get('profile', [ClientProfileController::class, 'show']);
+    Route::put('profile', [ClientProfileController::class, 'update']);
+    Route::put('profile/password', [ClientProfileController::class, 'updatePassword']);
+
+    Route::get('event-requests', [ClientEventRequestController::class, 'index']);
+    Route::get('event-request/show/{id}', [ClientEventRequestController::class, 'show']);
+    Route::post('event-request/store', [ClientEventRequestController::class, 'store']);
 });
 
 
@@ -149,9 +191,13 @@ Route::middleware(['auth:sanctum', 'role:traiteur'])->prefix('caterer')->group(f
     Route::get('dashboard', [CatererDashboardController::class, 'index']);
     Route::get('dashboard/upcoming', [CatererDashboardController::class, 'upcoming']);
     Route::get('dashboard/revenue-chart', [CatererDashboardController::class, 'revenueChart']);
+
+    Route::get('service/{id}/media', [CatererServiceController::class, 'media']);
+    Route::post('service/{id}/media', [CatererServiceController::class, 'uploadMedia']);
+    Route::delete('service/media/{mediaId}', [CatererServiceController::class, 'deleteMedia']);
+
+    Route::get('search', [CatererSearchController::class, 'search']);
 });
-
-
 
 
 

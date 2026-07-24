@@ -24,6 +24,7 @@ interface ServiceItem {
   event_type: string;
   is_active: boolean;
   category: { id: number; name: string } | null;
+  thumbnail_url?: string | null;
 }
 
 export default function Services() {
@@ -211,9 +212,17 @@ export default function Services() {
                 !service.is_active ? 'opacity-70' : ''
               }`}
             >
-              <div className="w-32 h-20 rounded-lg bg-[#ede7e0] flex items-center justify-center shrink-0">
+            <div className="w-32 h-20 rounded-lg bg-[#ede7e0] flex items-center justify-center shrink-0 overflow-hidden">
+              {service.thumbnail_url ? (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${service.thumbnail_url}`} 
+                  alt={service.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
                 <ImageOff className="w-6 h-6 text-[#8b716c]" strokeWidth={1.5} />
-              </div>
+              )}
+            </div>
 
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">

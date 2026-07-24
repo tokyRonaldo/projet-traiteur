@@ -76,9 +76,11 @@ export default function Gallery() {
     <div>
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-[#1d1b17]">Galerie</h2>
+          <h2 className="text-3xl font-bold text-[#1d1b17]">Galerie du lieu &amp; événements</h2>
           <p className="text-[#58423d] mt-2 max-w-2xl">
-            Ajoutez des photos et vidéos qui présentent votre travail aux clients potentiels.
+            Ajoutez des photos de votre établissement, de vos événements passés, pour donner un aperçu
+            authentique de votre travail. Les photos spécifiques à un service se gèrent directement
+            depuis la fiche de ce service.
           </p>
         </div>
         <div>

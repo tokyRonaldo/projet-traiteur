@@ -1,7 +1,8 @@
 // components/caterer/service/ServiceFormModal.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { ImageOff, Trash2, UploadCloud } from 'lucide-react';
 import { X } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -39,6 +40,50 @@ export default function ServiceFormModal({ initialData, onClose, onSaved }: Serv
   const [form, setForm] = useState<ServiceFormData>(initialData ?? EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [serviceMedia, setServiceMedia] = useState<{ id: number; url: string; type: string }[]>([]);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+
+  const loadServiceMedia = () => {
+    if (!form.id) return;
+    api.get(`caterer/service/${form.id}/media`).then(setServiceMedia).catch(() => setServiceMedia([]));
+  };
+
+  useEffect(() => {
+    loadServiceMedia();
+  }, [form.id]);
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !form.id) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploadingMedia(true);
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/caterer/service/${form.id}/media`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: formData,
+      });
+      loadServiceMedia();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUploadingMedia(false);
+      if (mediaInputRef.current) mediaInputRef.current.value = '';
+    }
+  };
+
+  const handleMediaDelete = async (mediaId: number) => {
+    setServiceMedia((prev) => prev.filter((m) => m.id !== mediaId));
+    try {
+      await api.delete(`caterer/service/media/${mediaId}`);
+    } catch {
+      loadServiceMedia();
+    }
+  };
 
   useEffect(() => {
     api.get('caterer/categories').then(setCategories).catch(() => setCategories([]));
@@ -153,6 +198,47 @@ export default function ServiceFormModal({ initialData, onClose, onSaved }: Serv
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
+
+          {form.id && (
+            <div>
+              <label className="block text-xs font-semibold text-[#58423d] mb-2">
+                Photos du service
+              </label>
+              <div className="grid grid-cols-4 gap-2 mb-2">
+                {serviceMedia.map((m) => (
+                  <div key={m.id} className="relative aspect-square rounded-lg overflow-hidden bg-[#ede7e0] group">
+                    {m.type === 'image' ? (
+                      <img src={ `${process.env.NEXT_PUBLIC_API_URL}${m.url}`} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-black">
+                        <span className="text-white text-xs">Vidéo</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => handleMediaDelete(m.id)}
+                      className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-3 h-3" strokeWidth={2} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => mediaInputRef.current?.click()}
+                  disabled={uploadingMedia}
+                  className="aspect-square rounded-lg border-2 border-dashed border-[#dfc0ba] flex items-center justify-center hover:border-[#9b2f1e] transition-colors"
+                >
+                  <UploadCloud className="w-5 h-5 text-[#8b716c]" strokeWidth={1.5} />
+                </button>
+              </div>
+              <input
+                ref={mediaInputRef}
+                type="file"
+                accept="image/*,video/mp4"
+                onChange={handleMediaUpload}
+                className="hidden"
+              />
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <button

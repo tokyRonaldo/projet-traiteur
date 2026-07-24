@@ -1,15 +1,15 @@
-// app/client/dashboard/page.tsx
+// app/client/bookings/page.tsx
 import Sidebar from "@/components/client/Sidebar";
 import Header from "@/components/client/Header";
-import DashboardGrid from "@/components/client/dashboard/DashboardGrid";
+import Bookings from "@/components/client/bookings/Bookings";
 
-export default function ClientDashboard() {
+export default function ClientBookingsPage() {
   return (
     <div className="flex min-h-screen bg-[#fef8f1]">
       <Sidebar />
       <main className="ml-64 flex-1 pt-24 px-8 pb-8">
         <Header />
-        <DashboardGrid />
+        <Bookings />
       </main>
     </div>
   );
