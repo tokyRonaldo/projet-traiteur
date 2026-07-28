@@ -39,7 +39,7 @@ export function useLoginUser() {
         throw new Error(result.message || 'Login failed');
       }
 
-      saveAuthentication(result.token, result.user);
+      saveAuthentication(result.token, result.user,result.role);
       if(result.role == 'traiteur'){
         router.push('/caterer/dashboard');
 

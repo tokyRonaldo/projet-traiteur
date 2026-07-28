@@ -35,8 +35,8 @@ use App\Http\Controllers\Caterer\{
 };
 
 use App\Http\Controllers\Client\ClientQuoteController;
+use App\Http\Controllers\Client\ClientCatererSearchController;
 use App\Http\Controllers\Client\{
-    ClientCatererSearchController, 
     ClientFavoriteController,
     ClientReviewController,
     ClientBookingController,
@@ -115,6 +115,8 @@ Route::middleware(['auth:sanctum', 'role:client'])->prefix('client')->group(func
     Route::get('event-requests', [ClientEventRequestController::class, 'index']);
     Route::get('event-request/show/{id}', [ClientEventRequestController::class, 'show']);
     Route::post('event-request/store', [ClientEventRequestController::class, 'store']);
+
+
 });
 
 

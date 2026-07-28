@@ -29,20 +29,22 @@ interface EventRequestItem {
   guests_number: number;
   budget: number;
   message: string;
-  status: 'pending' | 'responded' | 'draft';
+  status: 'pending' | 'responded' | 'rejected' | 'accepted';
   created_at: string;
 }
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Nouvelle',
   responded: 'Répondue',
-  draft: 'Brouillon',
+  accepted: 'Confirmé',
+  rejected: 'Refusé',
 };
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-[#9b2f1e] text-white',
   responded: 'bg-[#dae1e3] text-[#5d6466]',
   draft: 'bg-[#e7e2db] text-[#58423d]',
+  accepted: 'bg-green-100 text-green-700',
 };
 
 export default function EventRequests() {

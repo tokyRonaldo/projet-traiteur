@@ -29,7 +29,7 @@ interface Conversation {
 
 interface ChatMessage {
   id: number;
-  sender: 'caterer' | 'client';
+  sender: 'me' | 'other';
   content: string;
   sent_at: string;
   read: boolean;
@@ -81,7 +81,7 @@ export default function Messages() {
 
     const optimisticMessage: ChatMessage = {
       id: Date.now(),
-      sender: 'caterer',
+      sender: 'me',
       content: draft,
       sent_at: new Date().toISOString(),
       read: false,
@@ -240,12 +240,12 @@ export default function Messages() {
                   <div
                     key={msg.id}
                     className={`flex items-end gap-2 max-w-[75%] ${
-                      msg.sender === 'caterer' ? 'self-end flex-row-reverse' : ''
+                      msg.sender === 'me' ? 'self-end flex-row-reverse' : ''
                     }`}
                   >
                     <div
                       className={`p-4 shadow-sm ${
-                        msg.sender === 'caterer'
+                        msg.sender === 'me'
                           ? 'bg-[#bc4733] text-white rounded-2xl rounded-br-sm'
                           : 'bg-white border border-[#dfc0ba] text-[#1d1b17] rounded-2xl rounded-bl-sm'
                       }`}
@@ -253,11 +253,11 @@ export default function Messages() {
                       <p className="text-sm">{msg.content}</p>
                       <span
                         className={`text-[10px] block mt-2 ${
-                          msg.sender === 'caterer' ? 'text-white/80 text-right' : 'text-[#58423d]'
+                          msg.sender === 'me' ? 'text-white/80 text-right' : 'text-[#58423d]'
                         }`}
                       >
                         {formatTime(msg.sent_at)}
-                        {msg.sender === 'caterer' && msg.read ? ' · Lu' : ''}
+                        {msg.sender === 'me' && msg.read ? ' · Lu' : ''}
                       </span>
                     </div>
                   </div>

@@ -39,6 +39,7 @@ class AuthController extends Controller
             'message' => 'Inscription réussie ! Votre compte est en attente de vérification.',
             'user'    => $user,
             'token'    => $token,
+            'role' => $role->name,
         ], 201);
     }
 
@@ -85,6 +86,7 @@ class AuthController extends Controller
             'message' => 'Inscription réussie ! Votre compte est en attente de vérification.',
             'user'    => $user,
             'token'    => $token,
+            'role' => $role->name,
         ], 201);
     }
 

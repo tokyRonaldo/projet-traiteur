@@ -51,7 +51,7 @@ export function useRegisterCaterer() {
         throw new Error(data.message || "Échec de l'inscription");
       }
 
-      saveAuthentication(data.token, data.user);
+      saveAuthentication(data.token, data.user,data.role);
 
 
       return {

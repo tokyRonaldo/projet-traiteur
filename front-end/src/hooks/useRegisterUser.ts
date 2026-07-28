@@ -67,7 +67,7 @@ export function useRegisterUser() {
         throw new Error(data.message || 'Échec de l’inscription');
       }
 
-      saveAuthentication(data.token, data.user);
+      saveAuthentication(data.token, data.user,data.role);
 
 
       //await refetchUser();

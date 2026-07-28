@@ -34,7 +34,7 @@ class ClientMessageController extends Controller
 
             return [
                 'id' => $partnerId,
-                'name' => $partner->name,
+                'client_name' => $partner->name,
                 'last_message' => $lastMessage->message,
                 'last_message_at' => $lastMessage->created_at,
                 'unread_count' => $unreadCount,

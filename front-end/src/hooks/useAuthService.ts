@@ -6,13 +6,17 @@ export function useAuthService() {
   const { setUser } = useAuth();
   const router = useRouter();
 
-  const saveAuthentication = (token: string, user: any) => {
+  const saveAuthentication = (token: string, user: any,role : string) => {
     localStorage.setItem('token', token);
 
     Cookies.set('token', token, {
       expires: 7,
       sameSite: 'lax',
     });
+    Cookies.set("role", role, {
+    expires: 7,
+    sameSite: "lax",
+  });
 
     setUser(user);
   };
