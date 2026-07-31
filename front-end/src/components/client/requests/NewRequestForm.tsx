@@ -147,7 +147,7 @@ export default function NewRequestForm() {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#ffdad4] flex items-center justify-center overflow-hidden shrink-0">
                   {selectedCaterer.logo_url ? (
-                    <img src={selectedCaterer.logo_url} alt="" className="w-full h-full object-cover" />
+                    <img src={`${process.env.NEXT_PUBLIC_API_URL}${selectedCaterer.logo_url}`} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <ImageOff className="w-4 h-4 text-[#8b716c]" strokeWidth={1.5} />
                   )}
@@ -193,7 +193,7 @@ export default function NewRequestForm() {
                     >
                       <div className="w-8 h-8 rounded-full bg-[#ffdad4] flex items-center justify-center overflow-hidden shrink-0">
                         {c.logo_url ? (
-                          <img src={c.logo_url} alt="" className="w-full h-full object-cover" />
+                          <img src={`${process.env.NEXT_PUBLIC_API_URL}${c.logo_url}`} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <ImageOff className="w-3.5 h-3.5 text-[#8b716c]" strokeWidth={1.5} />
                         )}

@@ -252,7 +252,7 @@ export default function DashboardGrid() {
                   <div className="h-28 rounded-lg overflow-hidden mb-2 bg-[#f3ede6] flex items-center justify-center relative">
                     {f.logo_url ? (
                       <img
-                        src={f.logo_url}
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${f.logo_url}`}
                         alt={f.company_name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />

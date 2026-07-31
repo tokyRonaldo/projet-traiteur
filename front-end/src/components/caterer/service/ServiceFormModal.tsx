@@ -210,10 +210,12 @@ export default function ServiceFormModal({ initialData, onClose, onSaved }: Serv
                     {m.type === 'image' ? (
                       <img src={ `${process.env.NEXT_PUBLIC_API_URL}${m.url}`} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-black">
-                        <span className="text-white text-xs">Vidéo</span>
-                      </div>
-                    )}
+                      <video
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${m.url}`}
+                        className="w-full h-full object-cover"
+                        controls
+                      />
+                   )}
                     <button
                       onClick={() => handleMediaDelete(m.id)}
                       className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"

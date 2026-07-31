@@ -44,7 +44,7 @@ export default function Gallery() {
         const formData = new FormData();
         formData.append('file', file);
 
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/caterer/gallery/upload`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/caterer/gallery/upload`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -125,7 +125,7 @@ export default function Gallery() {
               className="relative aspect-square rounded-xl overflow-hidden bg-[#ede7e0] border border-[#dfc0ba] group cursor-pointer"
             >
               {item.type === 'image' ? (
-                <img src={item.url} alt="" className="w-full h-full object-cover" />
+                <img src={`${process.env.NEXT_PUBLIC_API_URL}${item.url}`} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-[#1d1b17]">
                   <Film className="w-8 h-8 text-white" strokeWidth={1.5} />
@@ -161,14 +161,14 @@ export default function Gallery() {
 
           {preview.type === 'image' ? (
             <img
-              src={preview.url}
+              src={`${process.env.NEXT_PUBLIC_API_URL}${preview.url}`}
               alt=""
               className="max-w-full max-h-[85vh] rounded-lg object-contain"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
             <video
-              src={preview.url}
+              src={`${process.env.NEXT_PUBLIC_API_URL}${preview.url}`}
               controls
               autoPlay
               className="max-w-full max-h-[85vh] rounded-lg"

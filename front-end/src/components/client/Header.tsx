@@ -85,7 +85,7 @@ export default function Header() {
                 >
                   <div className="w-9 h-9 rounded-full bg-[#ffdad4] flex items-center justify-center shrink-0 overflow-hidden">
                     {r.logo_url ? (
-                      <img src={r.logo_url} alt="" className="w-full h-full object-cover" />
+                      <img src={`${process.env.NEXT_PUBLIC_API_URL}${r.logo_url}`} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-xs font-bold text-[#9b2f1e]">
                         {r.company_name.slice(0, 2).toUpperCase()}

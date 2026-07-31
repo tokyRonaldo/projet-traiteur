@@ -42,7 +42,8 @@ use App\Http\Controllers\Client\{
     ClientBookingController,
     ClientMessageController,
     ClientProfileController,
-    ClientEventRequestController
+    ClientEventRequestController,
+    ClientCatererProfileController
     };
 
 /*
@@ -116,6 +117,8 @@ Route::middleware(['auth:sanctum', 'role:client'])->prefix('client')->group(func
     Route::get('event-request/show/{id}', [ClientEventRequestController::class, 'show']);
     Route::post('event-request/store', [ClientEventRequestController::class, 'store']);
 
+    Route::get('caterers/{id}/profile', [ClientCatererProfileController::class, 'show']);
+    Route::get('favorites', [ClientFavoriteController::class, 'index']);
 
 });
 

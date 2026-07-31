@@ -191,7 +191,7 @@ function QuoteCard({
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-lg bg-[#f3ede6] flex items-center justify-center overflow-hidden shrink-0">
           {quote.caterer.logo_url ? (
-            <img src={quote.caterer.logo_url} alt="" className="w-full h-full object-cover" />
+            <img src={`${process.env.NEXT_PUBLIC_API_URL}${quote.caterer.logo_url}`} alt="" className="w-full h-full object-cover" />
           ) : (
             <ImageOff className="w-5 h-5 text-[#8b716c]" strokeWidth={1.5} />
           )}
