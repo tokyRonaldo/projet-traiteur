@@ -80,4 +80,26 @@ class ClientMessageController extends Controller
 
         return response()->json(['data' => $message], 201);
     }
+
+
+    // GET client/messages/recent
+    public function recent(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $messages = Message::where('receiver_id', $userId)
+            ->with('sender')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn($m) => [
+                'id' => $m->id,
+                'sender_name' => $m->sender->name,
+                'preview' => \Illuminate\Support\Str::limit($m->message, 60),
+                'sent_at' => $m->created_at,
+                'is_read' => $m->read_status,
+            ]);
+
+        return response()->json(['data' => $messages]);
+    }
 }

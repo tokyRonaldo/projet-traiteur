@@ -28,4 +28,28 @@ class ClientBookingController extends Controller
 
         return response()->json($booking);
     }
+
+    // GET client/bookings/next
+    public function next(Request $request)
+    {
+        $booking = Booking::where('client_id', $request->user()->id)
+            ->where('status', 'confirmed')
+            ->where('event_date', '>=', now())
+            ->with('caterer')
+            ->orderBy('event_date')
+            ->first();
+        
+        if (!$booking) {
+            return response()->json(null);
+        }
+
+        return response()->json([
+            'id' => $booking->id,
+            'title' => $booking->title,
+            'event_date' => $booking->event_date,
+            'caterer_name' => $booking->caterer->company_name,
+            'tasks_done' => 0,
+            'tasks_total' => 0,
+        ]);
+    }
 }

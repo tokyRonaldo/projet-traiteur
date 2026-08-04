@@ -43,7 +43,8 @@ use App\Http\Controllers\Client\{
     ClientMessageController,
     ClientProfileController,
     ClientEventRequestController,
-    ClientCatererProfileController
+    ClientCatererProfileController,
+    ClientNotificationController
     };
 
 /*
@@ -119,6 +120,13 @@ Route::middleware(['auth:sanctum', 'role:client'])->prefix('client')->group(func
 
     Route::get('caterers/{id}/profile', [ClientCatererProfileController::class, 'show']);
     Route::get('favorites', [ClientFavoriteController::class, 'index']);
+
+    Route::get('notifications', [ClientNotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [ClientNotificationController::class, 'unreadCount']);
+    Route::put('notifications/{id}/read', [ClientNotificationController::class, 'markAsRead']);
+
+    Route::get('messages/recent', [ClientMessageController::class, 'recent']);
+    Route::get('bookings/next', [ClientBookingController::class, 'next']);
 
 });
 

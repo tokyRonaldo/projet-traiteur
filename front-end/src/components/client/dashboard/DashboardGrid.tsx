@@ -56,16 +56,22 @@ export default function DashboardGrid() {
   useEffect(() => {
     Promise.all([
       api.get('user'),
-      api.get('client/requests?status=active'),
+      api.get('client/event-requests?status=active'),
       api.get('client/messages/recent'),
       api.get('client/bookings/next'),
       api.get('client/favorites?limit=2'),
     ])
       .then(([user, requests, msgs, booking, favs]) => {
+        console.log(user.name)
+        console.log('user.name')
         setClientName(user.name);
         setActiveRequests(requests.data ?? requests);
         setMessages(msgs.data ?? msgs);
-        setNextBooking(booking ?? null);
+        setNextBooking(
+        booking && Object.keys(booking).length !== 0
+          ? booking
+          : null
+      );
         setFavorites(favs.data ?? favs);
       })
       .catch((err) => console.error(err))

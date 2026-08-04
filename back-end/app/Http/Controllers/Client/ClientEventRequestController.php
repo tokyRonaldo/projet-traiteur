@@ -8,17 +8,27 @@ use Illuminate\Http\Request;
 
 class ClientEventRequestController extends Controller
 {
+
     public function index(Request $request)
     {
         $query = EventRequest::where('client_id', $request->user()->id)->with('caterer', 'quotes');
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $status = $request->status;
+
+            if ($status === 'active') {
+                // "Active" = pas encore finalisée (ni acceptée, ni refusée)
+                $query->whereIn('status', ['pending', 'responded']);
+            } else {
+                $query->where('status', $status);
+            }
         }
 
-        return response()->json(['data' => $query->latest()->get()]);
+        return response()->json(['data' => $query->latest()->get()->map(function ($r) {
+            $r->quotes_count = $r->quotes->count();
+            return $r;
+        })]);
     }
-
     public function show(Request $request, $id)
     {
         $eventRequest = EventRequest::where('client_id', $request->user()->id)

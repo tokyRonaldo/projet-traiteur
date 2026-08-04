@@ -25,15 +25,17 @@ class ClientFavoriteController extends Controller
     }
 
 
-    // GET client/favorites
     public function index(Request $request)
     {
         $userId = $request->user()->id;
 
-        $favorites = \App\Models\Favorite::where('user_id', $userId)
-            ->with('caterer')
-            ->latest()
-            ->get();
+        $query = \App\Models\Favorite::where('user_id', $userId)->with('caterer')->latest();
+
+        if ($request->filled('limit')) {
+            $query->take((int) $request->query('limit'));
+        }
+
+        $favorites = $query->get();
 
         $catererIds = $favorites->pluck('caterer_id');
         $logos = \App\Models\Media::where('entity_type', 'caterer')
@@ -46,9 +48,9 @@ class ClientFavoriteController extends Controller
             return [
                 'id' => $fav->caterer->id,
                 'company_name' => $fav->caterer->company_name,
-                'location' => $fav->caterer->location,
-                'rating' => (float) $fav->caterer->rating,
+                'price_range' => null, // à calculer plus tard si besoin
                 'logo_url' => $logos->get($fav->caterer->id)?->url,
+                'rating'=> 5
             ];
         });
 
