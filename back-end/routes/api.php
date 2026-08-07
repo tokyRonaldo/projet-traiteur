@@ -47,6 +47,8 @@ use App\Http\Controllers\Client\{
     ClientNotificationController
     };
 
+use App\Http\Controllers\Public\PublicHomeController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -86,6 +88,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     );
 
 
+});
+
+Route::prefix('public')->group(function () {
+    Route::get('caterers/featured', [PublicHomeController::class, 'featuredCaterers']);
+    Route::get('categories', [PublicHomeController::class, 'categories']);
+    Route::get('reviews/featured', [PublicHomeController::class, 'featuredReviews']);
+    Route::get('stats', [PublicHomeController::class, 'stats']);
+    Route::get('caterers', [PublicHomeController::class, 'caterers']);
 });
 
 

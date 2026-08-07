@@ -15,11 +15,26 @@ const routePermissions = [
   },
 ];
 
+// Routes publiques (non protégées)
+const publicRoutes = [
+  "/caterer",
+  "/caterer/test",
+  "/caterer/public",
+];
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const role = request.cookies.get("role")?.value;
-
   const pathname = request.nextUrl.pathname;
+
+  // Vérifie si la route est publique
+  const isPublicRoute = publicRoutes.some(route => {
+    return pathname === route || pathname.startsWith(route + "/");
+  });
+
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
 
   // Non connecté
   if (!token) {

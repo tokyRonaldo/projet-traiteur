@@ -15,7 +15,6 @@ export default function Home() {
       <EventCategories />
       <HowItWorks />
       <Testimonials />
-      <BlogTips />
       <BecomeCatererCTA />
     </HomeLayout>
   );

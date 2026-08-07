@@ -1,41 +1,75 @@
+// components/home/SearchBar.tsx
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search, MapPin, UtensilsCrossed } from 'lucide-react';
+
 export default function SearchBar() {
+  const router = useRouter();
+  const [query, setQuery] = useState('');
+  const [service, setService] = useState('');
+  const [location, setLocation] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const params = new URLSearchParams();
+    if (query.trim()) params.set('q', query.trim());
+    if (service.trim()) params.set('service', service.trim());
+    if (location.trim()) params.set('location', location.trim());
+
+    router.push(`/caterer${params.toString() ? `?${params.toString()}` : ''}`);
+  };
+
   return (
-    <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-2xl shadow-primary/10 border border-primary/5">
-      <div className="grid md:grid-cols-3 gap-3">
-        <div className="flex flex-col gap-1 px-4 py-2 bg-background-light dark:bg-slate-700 rounded-xl">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Location</span>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm">location_on</span>
-            <input className="bg-transparent border-none p-0 focus:ring-0 text-sm w-full" placeholder="Enter city" type="text" />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1 px-4 py-2 bg-background-light dark:bg-slate-700 rounded-xl">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Event Type</span>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm">event</span>
-            <select className="bg-transparent border-none p-0 focus:ring-0 text-sm w-full">
-              <option>Wedding</option>
-              <option>Birthday</option>
-              <option>Corporate</option>
-              <option>Private Party</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1 px-4 py-2 bg-background-light dark:bg-slate-700 rounded-xl">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Guests</span>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm">groups</span>
-            <input className="bg-transparent border-none p-0 focus:ring-0 text-sm w-full" placeholder="50" type="number" />
-          </div>
-        </div>
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col sm:flex-row gap-2 bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-lg border border-primary/10"
+    >
+      <div className="flex items-center flex-1 px-3 py-2">
+        <Search className="w-5 h-5 opacity-50 shrink-0" strokeWidth={1.75} />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Nom du traiteur..."
+          className="w-full bg-transparent border-none outline-none px-2 text-sm"
+        />
       </div>
 
-      <button className="w-full mt-3 bg-primary text-white font-bold py-4 rounded-xl shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2">
-        <span className="material-symbols-outlined">search</span>
-        Search Caterers
+      <div className="hidden sm:block w-px bg-primary/10 my-1" />
+
+      <div className="flex items-center flex-1 px-3 py-2">
+        <UtensilsCrossed className="w-5 h-5 opacity-50 shrink-0" strokeWidth={1.75} />
+        <input
+          type="text"
+          value={service}
+          onChange={(e) => setService(e.target.value)}
+          placeholder="Type de service (buffet, cocktail...)"
+          className="w-full bg-transparent border-none outline-none px-2 text-sm"
+        />
+      </div>
+
+      <div className="hidden sm:block w-px bg-primary/10 my-1" />
+
+      <div className="flex items-center flex-1 px-3 py-2">
+        <MapPin className="w-5 h-5 opacity-50 shrink-0" strokeWidth={1.75} />
+        <input
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Ville, région..."
+          className="w-full bg-transparent border-none outline-none px-2 text-sm"
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity shrink-0"
+      >
+        Rechercher
       </button>
-    </div>
+    </form>
   );
 }
