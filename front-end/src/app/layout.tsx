@@ -1,8 +1,15 @@
+// app/layout.tsx
+import { LoadingProvider } from '@/context/LoadingContext';
+import GlobalLoader from '@/components/shared/GlobalLoader';
+import NavigationLoader from '@/components/shared/NavigationLoader';
+import ApiLoadingBridge from '@/components/shared/ApiLoadingBridge';
+import { AuthProvider } from '@/context/AuthContext';
+
 import type { Metadata } from "next";
 import { Inter, Rubik } from "next/font/google";
 import "./globals.css";
 import ToastProvider from "@/components/ui/ToastProvider";
-import { AuthProvider } from "@/context/AuthContext";   // ← Importe ici
+
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,23 +29,24 @@ export const metadata: Metadata = {
   description: "Rejoignez la plateforme dédiée aux professionnels du catering.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+   <html lang="fr" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${rubik.variable}
                    font-sans antialiased
                    bg-background text-foreground`}
       >
-        {/* AuthProvider doit envelopper toute l'application */}
-        <AuthProvider>
-          {children}
-          <ToastProvider />
-        </AuthProvider>
+         <LoadingProvider>
+          <GlobalLoader />
+          <NavigationLoader />
+          <ApiLoadingBridge />
+          <AuthProvider>
+            {children}
+            <ToastProvider />
+          </AuthProvider>
+        </LoadingProvider>
       </body>
     </html>
   );

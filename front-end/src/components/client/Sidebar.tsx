@@ -15,6 +15,7 @@ import {
   Settings,
   LogOut,
   Home,
+  Bell
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
@@ -28,6 +29,7 @@ const navItems = [
   { label: 'Devis reçus', href: '/client/quotes', icon: ReceiptText },
   { label: 'Réservations', href: '/client/bookings', icon: CalendarCheck },
   { label: 'Messages', href: '/client/messages', icon: MessageSquare },
+  { label: 'Notifications', href: '/client/notifications', icon: Bell },
 ];
 
 interface ClientInfo {

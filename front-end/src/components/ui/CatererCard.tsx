@@ -1,7 +1,10 @@
+// components/ui/CatererCard.tsx
+import Link from 'next/link';
 import { Button } from './Button';
 import Badge from './Badge';
 
 interface CatererCardProps {
+  id: number;
   name: string;
   cuisine: string;
   rating: number;
@@ -10,12 +13,15 @@ interface CatererCardProps {
   featured?: boolean;
 }
 
-export default function CatererCard({ name, cuisine, rating, price, image, featured }: CatererCardProps) {
+export default function CatererCard({ id, name, cuisine, rating, price, image, featured }: CatererCardProps) {
   return (
-    <div className="group bg-background-light dark:bg-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-primary/5">
+    <Link
+      href={`/caterer/${id}`}
+      className="group block bg-background-light dark:bg-slate-800 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-primary/5"
+    >
       <div className="h-56 overflow-hidden relative">
         <img
-          src={image}
+          src={`${process.env.NEXT_PUBLIC_API_URL}${image}`}
           alt={name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
@@ -37,10 +43,9 @@ export default function CatererCard({ name, cuisine, rating, price, image, featu
             <span className="text-xs opacity-60 block">Starts from</span>
             <span className="font-bold text-primary text-lg">${price} / person</span>
           </div>
-          <Button variant="ghost" size="sm" icon={<span className="material-symbols-outlined">chevron_right</span>}>
-          </Button>
+          <Button variant="ghost" size="sm" icon={<span className="material-symbols-outlined">chevron_right</span>} />
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

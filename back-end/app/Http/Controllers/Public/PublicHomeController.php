@@ -76,71 +76,118 @@ class PublicHomeController extends Controller
     }
 
     // GET /public/caterers
-public function caterers(Request $request)
-{
-    $query = Caterer::where('verified', true);
+    public function caterers(Request $request)
+    {
+        $query = Caterer::where('verified', true);
 
-    if ($request->filled('q')) {
-        $term = $request->query('q');
-        $query->where(function ($q) use ($term) {
-            $q->where('company_name', 'like', "%{$term}%")
-              ->orWhere('location', 'like', "%{$term}%");
+        if ($request->filled('q')) {
+            $term = $request->query('q');
+            $query->where(function ($q) use ($term) {
+                $q->where('company_name', 'like', "%{$term}%")
+                ->orWhere('location', 'like', "%{$term}%");
+            });
+        }
+
+        if ($request->filled('location')) {
+            $query->where('location', 'like', '%' . $request->query('location') . '%');
+        }
+
+        if ($request->filled('category_id')) {
+            $categoryId = $request->query('category_id');
+            $query->whereHas('services', fn($s) => $s->where('category_id', $categoryId)->where('is_active', true));
+        }
+
+        if ($request->filled('service')) {
+        $serviceTerm = $request->query('service');
+        $query->whereHas('services', function ($s) use ($serviceTerm) {
+            $s->where('title', 'like', "%{$serviceTerm}%")->where('is_active', true);
         });
     }
 
-    if ($request->filled('location')) {
-        $query->where('location', 'like', '%' . $request->query('location') . '%');
+        if ($request->filled('min_rating')) {
+            $query->where('rating', '>=', $request->query('min_rating'));
+        }
+
+        $sort = $request->query('sort', 'rating');
+        match ($sort) {
+            'rating' => $query->orderByDesc('rating'),
+            'newest' => $query->latest(),
+            default => $query->orderByDesc('rating'),
+        };
+
+        $caterers = $query->paginate(9);
+
+        $catererIds = collect($caterers->items())->pluck('id');
+        $logos = Media::where('entity_type', 'caterer')
+            ->whereIn('entity_id', $catererIds)
+            ->where('type', 'logo')
+            ->get()
+            ->keyBy('entity_id');
+
+        $caterers->getCollection()->transform(function ($caterer) use ($logos) {
+            $activeServices = $caterer->services()->where('is_active', true)->get();
+            $avgPrice = $activeServices->avg('price');
+            $categoryNames = $activeServices->pluck('category.name')->filter()->unique()->take(2)->values();
+
+            return [
+                'id' => $caterer->id,
+                'company_name' => $caterer->company_name,
+                'description' => $caterer->description,
+                'location' => $caterer->location,
+                'rating' => (float) $caterer->rating,
+                'average_price' => $avgPrice ? round($avgPrice) : null,
+                'logo_url' => $logos->get($caterer->id)?->url,
+                'tags' => $categoryNames,
+            ];
+        });
+        
+        return response()->json($caterers);
     }
 
-    if ($request->filled('category_id')) {
-        $categoryId = $request->query('category_id');
-        $query->whereHas('services', fn($s) => $s->where('category_id', $categoryId)->where('is_active', true));
-    }
 
-    if ($request->filled('service')) {
-    $serviceTerm = $request->query('service');
-    $query->whereHas('services', function ($s) use ($serviceTerm) {
-        $s->where('title', 'like', "%{$serviceTerm}%")->where('is_active', true);
-    });
-}
+    public function catererProfile($id)
+    {
+        $caterer = Caterer::where('verified', true)
+            ->with(['services' => fn($q) => $q->where('is_active', true), 'services.category'])
+            ->findOrFail($id);
 
-    if ($request->filled('min_rating')) {
-        $query->where('rating', '>=', $request->query('min_rating'));
-    }
+        $logo = Media::where('entity_type', 'caterer')->where('entity_id', $id)->where('type', 'logo')->first();
 
-    $sort = $request->query('sort', 'rating');
-    match ($sort) {
-        'rating' => $query->orderByDesc('rating'),
-        'newest' => $query->latest(),
-        default => $query->orderByDesc('rating'),
-    };
+        $gallery = Media::where('entity_type', 'caterer')
+            ->where('entity_id', $id)
+            ->where('type', '!=', 'logo')
+            ->orderBy('position')
+            ->get(['id', 'url', 'type']);
 
-    $caterers = $query->paginate(9);
+        $serviceIds = $caterer->services->pluck('id');
+        $serviceMedia = Media::where('entity_type', 'service')
+            ->whereIn('entity_id', $serviceIds)
+            ->orderBy('position')
+            ->get()
+            ->groupBy('entity_id');
 
-    $catererIds = collect($caterers->items())->pluck('id');
-    $logos = Media::where('entity_type', 'caterer')
-        ->whereIn('entity_id', $catererIds)
-        ->where('type', 'logo')
-        ->get()
-        ->keyBy('entity_id');
+        $caterer->services->each(function ($service) use ($serviceMedia) {
+            $service->thumbnail_url = $serviceMedia->get($service->id)?->first()?->url;
+        });
 
-    $caterers->getCollection()->transform(function ($caterer) use ($logos) {
-        $activeServices = $caterer->services()->where('is_active', true)->get();
-        $avgPrice = $activeServices->avg('price');
-        $categoryNames = $activeServices->pluck('category.name')->filter()->unique()->take(2)->values();
+        $reviews = \App\Models\Review::where('caterer_id', $id)
+            ->with('user')
+            ->latest()
+            ->take(10)
+            ->get(['id', 'user_id', 'rating', 'comment', 'created_at']);
 
-        return [
+        return response()->json([
             'id' => $caterer->id,
             'company_name' => $caterer->company_name,
             'description' => $caterer->description,
             'location' => $caterer->location,
+            'website' => $caterer->website,
             'rating' => (float) $caterer->rating,
-            'average_price' => $avgPrice ? round($avgPrice) : null,
-            'logo_url' => $logos->get($caterer->id)?->url,
-            'tags' => $categoryNames,
-        ];
-    });
-    
-    return response()->json($caterers);
-}
+            'reviews_count' => \App\Models\Review::where('caterer_id', $id)->count(),
+            'logo_url' => $logo?->url,
+            'gallery' => $gallery,
+            'services' => $caterer->services,
+            'reviews' => $reviews,
+        ]);
+    }
 }

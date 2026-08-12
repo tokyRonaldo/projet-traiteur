@@ -49,7 +49,7 @@ export default function Header() {
           <Link href="/"><span className="font-bold text-xl">Caterly</span></Link>
 
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/caterers" className="text-sm font-semibold hover:text-primary transition-colors">Traiteurs</Link>
+            <Link href="/caterer" className="text-sm font-semibold hover:text-primary transition-colors">Traiteurs</Link>
             <Link href="/#categories" className="text-sm font-semibold hover:text-primary transition-colors">Catégories</Link>
             <Link href="/#how-it-works" className="text-sm font-semibold hover:text-primary transition-colors">Comment ça marche</Link>
           </div>

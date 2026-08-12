@@ -37,7 +37,7 @@ export default function FeaturedCaterers() {
             <h2 className="text-3xl font-bold mb-2">Traiteurs à la une</h2>
             <p className="opacity-60">Les mieux notés par nos clients</p>
           </div>
-          <Link href="/caterers" className="text-primary font-bold flex items-center gap-1 hover:gap-2 transition-all">
+          <Link href="/caterer" className="text-primary font-bold flex items-center gap-1 hover:gap-2 transition-all">
             Voir tous <span className="material-symbols-outlined">arrow_forward</span>
           </Link>
         </div>
@@ -49,6 +49,7 @@ export default function FeaturedCaterers() {
             {caterers.map((c) => (
               <CatererCard
                 key={c.id}
+                id={c.id}
                 name={c.company_name}
                 cuisine={c.description}
                 rating={c.rating}

@@ -34,4 +34,15 @@ class CatererNotificationController extends Controller
 
         return response()->json(['message' => 'Toutes les notifications ont été lues']);
     }
+
+
+    // GET caterer/notifications/unread-count
+    public function unreadCount(Request $request)
+    {
+        $count = Notification::where('user_id', $request->user()->id)
+            ->where('is_read', false)
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
 }

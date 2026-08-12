@@ -96,6 +96,7 @@ Route::prefix('public')->group(function () {
     Route::get('reviews/featured', [PublicHomeController::class, 'featuredReviews']);
     Route::get('stats', [PublicHomeController::class, 'stats']);
     Route::get('caterers', [PublicHomeController::class, 'caterers']);
+    Route::get('caterers/{id}', [PublicHomeController::class, 'catererProfile']);
 });
 
 
@@ -210,6 +211,7 @@ Route::middleware(['auth:sanctum', 'role:traiteur'])->prefix('caterer')->group(f
     Route::get('notifications', [CatererNotificationController::class, 'index']);
     Route::put('notifications/{id}/read', [CatererNotificationController::class, 'markAsRead']);
     Route::put('notifications/read-all', [CatererNotificationController::class, 'markAllAsRead']);
+    Route::get('notifications/unread-count', [CatererNotificationController::class, 'unreadCount']);
 
     Route::get('dashboard', [CatererDashboardController::class, 'index']);
     Route::get('dashboard/upcoming', [CatererDashboardController::class, 'upcoming']);

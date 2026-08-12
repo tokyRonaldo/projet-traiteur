@@ -1,4 +1,6 @@
 // lib/api.ts
+import { LoadingEvents } from './loadingEvents';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 function getToken() {
@@ -8,29 +10,34 @@ function getToken() {
 
 async function request(endpoint: string, options: RequestInit = {}) {
   const token = getToken();
+  LoadingEvents.start();
 
-  const res = await fetch(`${API_URL}/api/${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  try {
+    const res = await fetch(`${API_URL}/api/${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
 
-  if (res.status === 401) {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
-    return;
+    if (res.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      return;
+    }
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: 'Erreur serveur' }));
+      throw new Error(error.message || 'Erreur serveur');
+    }
+
+    return res.json();
+  } finally {
+    LoadingEvents.stop();
   }
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Erreur serveur' }));
-    throw new Error(error.message || 'Erreur serveur');
-  }
-
-  return res.json();
 }
 
 export const api = {
