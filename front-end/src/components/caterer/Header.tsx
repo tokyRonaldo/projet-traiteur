@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Search, Bell, ChevronDown, UserRound, Settings, LogOut,
+  Search, Bell, ChevronDown, UserRound, Settings, LogOut, Menu,
   Inbox, FileText, CalendarCheck, UtensilsCrossed,
 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -43,9 +43,10 @@ interface CatererInfo {
 interface HeaderProps {
   caterer: CatererInfo | null;
   onLogoutClick: () => void;
+  onMenuClick: () => void;
 }
 
-export default function Header({ caterer, onLogoutClick }: HeaderProps) {
+export default function Header({ caterer, onLogoutClick, onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -53,6 +54,7 @@ export default function Header({ caterer, onLogoutClick }: HeaderProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
   const [unreadCount, setUnreadCount] = useState(0);
@@ -95,6 +97,7 @@ export default function Header({ caterer, onLogoutClick }: HeaderProps) {
 
   const handleResultClick = (result: SearchResult) => {
     setSearchOpen(false);
+    setMobileSearchOpen(false);
     setQuery('');
     router.push(result.url);
   };
@@ -103,122 +106,159 @@ export default function Header({ caterer, onLogoutClick }: HeaderProps) {
     ? caterer.company_name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
     : '..';
 
-  return (
-    <header className="fixed top-0 right-0 left-72 z-40 flex justify-between items-center px-6 py-3 bg-[#fef8f1] border-b border-[#dfc0ba]">
-      {showSearch ? (
-        <div ref={searchRef} className="relative w-96">
-          <div className="flex items-center bg-white border border-[#dfc0ba] rounded-full px-4 py-2 focus-within:border-[#9b2f1e] focus-within:ring-2 focus-within:ring-[#9b2f1e]/20 transition-all">
-            <Search className="w-4 h-4 text-[#58423d] mr-2 shrink-0" strokeWidth={1.75} />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onFocus={() => results.length > 0 && setSearchOpen(true)}
-              placeholder="Rechercher un client, devis, service..."
-              className="bg-transparent border-none outline-none focus:ring-0 text-sm w-full placeholder:text-[#58423d]/50 text-[#1d1b17]"
-            />
-          </div>
+  const searchInput = (
+    <div ref={searchRef} className="relative w-full">
+      <div className="flex items-center bg-white border border-[#dfc0ba] rounded-full px-4 py-2 focus-within:border-[#9b2f1e] focus-within:ring-2 focus-within:ring-[#9b2f1e]/20 transition-all">
+        <Search className="w-4 h-4 text-[#58423d] mr-2 shrink-0" strokeWidth={1.75} />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => results.length > 0 && setSearchOpen(true)}
+          placeholder="Rechercher un client, devis, service..."
+          className="bg-transparent border-none outline-none focus:ring-0 text-sm w-full placeholder:text-[#58423d]/50 text-[#1d1b17]"
+        />
+      </div>
 
-          {searchOpen && (
-            <div className="absolute top-full mt-2 w-full bg-white border border-[#dfc0ba] rounded-xl shadow-lg overflow-hidden max-h-96 overflow-y-auto z-50">
-              {searchLoading && <p className="p-4 text-sm text-[#58423d]">Recherche...</p>}
-              {!searchLoading && results.length === 0 && query.trim().length >= 2 && (
-                <p className="p-4 text-sm text-[#58423d]">Aucun résultat pour &quot;{query}&quot;.</p>
-              )}
-              {!searchLoading &&
-                results.map((result, idx) => {
-                  const Icon = TYPE_ICONS[result.type];
-                  return (
-                    <button
-                      key={`${result.type}-${result.id}-${idx}`}
-                      onClick={() => handleResultClick(result)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#f9f3ec] transition-colors text-left border-b border-[#dfc0ba]/50 last:border-0"
-                    >
-                      <span className="p-2 bg-[#ffdad4] text-[#9b2f1e] rounded-lg shrink-0">
-                        <Icon className="w-4 h-4" strokeWidth={1.75} />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-[#1d1b17] truncate">{result.label}</p>
-                        <p className="text-xs text-[#58423d]">{TYPE_LABELS[result.type]} • {result.sublabel}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-            </div>
+      {searchOpen && (
+        <div className="absolute top-full mt-2 w-full bg-white border border-[#dfc0ba] rounded-xl shadow-lg overflow-hidden max-h-96 overflow-y-auto z-50">
+          {searchLoading && <p className="p-4 text-sm text-[#58423d]">Recherche...</p>}
+          {!searchLoading && results.length === 0 && query.trim().length >= 2 && (
+            <p className="p-4 text-sm text-[#58423d]">Aucun résultat pour &quot;{query}&quot;.</p>
           )}
+          {!searchLoading &&
+            results.map((result, idx) => {
+              const Icon = TYPE_ICONS[result.type];
+              return (
+                <button
+                  key={`${result.type}-${result.id}-${idx}`}
+                  onClick={() => handleResultClick(result)}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#f9f3ec] transition-colors text-left border-b border-[#dfc0ba]/50 last:border-0"
+                >
+                  <span className="p-2 bg-[#ffdad4] text-[#9b2f1e] rounded-lg shrink-0">
+                    <Icon className="w-4 h-4" strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#1d1b17] truncate">{result.label}</p>
+                    <p className="text-xs text-[#58423d]">{TYPE_LABELS[result.type]} • {result.sublabel}</p>
+                  </div>
+                </button>
+              );
+            })}
         </div>
-      ) : (
-        <h2 className="text-lg font-semibold text-[#1d1b17]">{PAGE_TITLES[pathname] ?? ''}</h2>
       )}
+    </div>
+  );
 
-      <div className="flex items-center gap-2">
-        {/* Cloche notifications */}
-        <Link
-          href="/caterer/notifications"
-          className="relative text-[#58423d] hover:bg-[#ede7e0] p-2 rounded-full transition-all"
-          aria-label="Notifications"
+  return (
+    <header className="fixed top-0 right-0 left-0 lg:left-72 z-30 bg-[#fef8f1] border-b border-[#dfc0ba]">
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 gap-2">
+        {/* Bouton hamburger, mobile uniquement */}
+        <button
+          onClick={onMenuClick}
+          className="p-2 text-[#58423d] hover:bg-[#ede7e0] rounded-full transition-all lg:hidden shrink-0"
+          aria-label="Ouvrir le menu"
         >
-          <Bell className="w-5 h-5" strokeWidth={1.75} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 bg-[#9b2f1e] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </Link>
+          <Menu className="w-5 h-5" strokeWidth={1.75} />
+        </button>
 
-        {/* Menu compte */}
-        <div ref={accountRef} className="relative">
-          <button
-            onClick={() => setAccountOpen((o) => !o)}
-            className="flex items-center gap-2 pl-2 pr-3 py-1.5 hover:bg-[#ede7e0] rounded-full transition-all"
+        {/* Recherche desktop, ou titre de page */}
+        {showSearch ? (
+          <div className="hidden md:block w-96 shrink-0">{searchInput}</div>
+        ) : (
+          <h2 className="hidden md:block text-lg font-semibold text-[#1d1b17] truncate">
+            {PAGE_TITLES[pathname] ?? ''}
+          </h2>
+        )}
+
+        {/* Titre compact mobile quand pas de recherche visible */}
+        <h2 className="md:hidden text-base font-semibold text-[#1d1b17] truncate flex-1">
+          {PAGE_TITLES[pathname] ?? ''}
+        </h2>
+
+        <div className="flex items-center gap-1 md:gap-2 shrink-0">
+          {/* Loupe mobile pour ouvrir la recherche en overlay */}
+          {showSearch && (
+            <button
+              onClick={() => setMobileSearchOpen((o) => !o)}
+              className="p-2 text-[#58423d] hover:bg-[#ede7e0] rounded-full transition-all md:hidden"
+              aria-label="Rechercher"
+            >
+              <Search className="w-5 h-5" strokeWidth={1.75} />
+            </button>
+          )}
+
+          <Link
+            href="/caterer/notifications"
+            className="relative text-[#58423d] hover:bg-[#ede7e0] p-2 rounded-full transition-all"
+            aria-label="Notifications"
           >
-            <div className="w-8 h-8 rounded-full bg-[#ffdad4] flex items-center justify-center overflow-hidden shrink-0">
-              {caterer?.logo_url ? (
-                <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.logo_url}`}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-[#9b2f1e] font-bold text-xs">{initials}</span>
-              )}
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-[#58423d]" strokeWidth={2} />
-          </button>
+            <Bell className="w-5 h-5" strokeWidth={1.75} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-[#9b2f1e] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Link>
 
-          {accountOpen && (
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-[#dfc0ba] rounded-xl shadow-lg overflow-hidden z-50">
-              <Link
-                href="/caterer/profile"
-                onClick={() => setAccountOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-[#1d1b17] hover:bg-[#f9f3ec] transition-colors"
-              >
-                <UserRound className="w-4 h-4" strokeWidth={1.75} />
-                Mon profil
-              </Link>
-              <Link
-                href="/caterer/settings"
-                onClick={() => setAccountOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-[#1d1b17] hover:bg-[#f9f3ec] transition-colors"
-              >
-                <Settings className="w-4 h-4" strokeWidth={1.75} />
-                Paramètres
-              </Link>
-              <div className="border-t border-[#dfc0ba]" />
-              <button
-                onClick={() => {
-                  setAccountOpen(false);
-                  onLogoutClick();
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <LogOut className="w-4 h-4" strokeWidth={1.75} />
-                Se déconnecter
-              </button>
-            </div>
-          )}
+          <div ref={accountRef} className="relative">
+            <button
+              onClick={() => setAccountOpen((o) => !o)}
+              className="flex items-center gap-1.5 md:gap-2 pl-1.5 md:pl-2 pr-2 md:pr-3 py-1.5 hover:bg-[#ede7e0] rounded-full transition-all"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#ffdad4] flex items-center justify-center overflow-hidden shrink-0">
+                {caterer?.logo_url ? (
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.logo_url}`}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-[#9b2f1e] font-bold text-xs">{initials}</span>
+                )}
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-[#58423d] hidden sm:block" strokeWidth={2} />
+            </button>
+
+            {accountOpen && (
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-[#dfc0ba] rounded-xl shadow-lg overflow-hidden z-50">
+                <Link
+                  href="/caterer/profile"
+                  onClick={() => setAccountOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-[#1d1b17] hover:bg-[#f9f3ec] transition-colors"
+                >
+                  <UserRound className="w-4 h-4" strokeWidth={1.75} />
+                  Mon profil
+                </Link>
+                <Link
+                  href="/caterer/settings"
+                  onClick={() => setAccountOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-[#1d1b17] hover:bg-[#f9f3ec] transition-colors"
+                >
+                  <Settings className="w-4 h-4" strokeWidth={1.75} />
+                  Paramètres
+                </Link>
+                <div className="border-t border-[#dfc0ba]" />
+                <button
+                  onClick={() => {
+                    setAccountOpen(false);
+                    onLogoutClick();
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" strokeWidth={1.75} />
+                  Se déconnecter
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Barre de recherche mobile, en overlay sous le header */}
+      {mobileSearchOpen && showSearch && (
+        <div className="md:hidden px-4 pb-3">{searchInput}</div>
+      )}
     </header>
   );
 }

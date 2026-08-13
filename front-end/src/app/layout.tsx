@@ -4,6 +4,7 @@ import GlobalLoader from '@/components/shared/GlobalLoader';
 import NavigationLoader from '@/components/shared/NavigationLoader';
 import ApiLoadingBridge from '@/components/shared/ApiLoadingBridge';
 import { AuthProvider } from '@/context/AuthContext';
+import { MobileSidebarProvider } from '@/context/MobileSidebarContext';
 
 import type { Metadata } from "next";
 import { Inter, Rubik } from "next/font/google";
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                    font-sans antialiased
                    bg-background text-foreground`}
       >
+        <MobileSidebarProvider>
          <LoadingProvider>
           <GlobalLoader />
           <NavigationLoader />
@@ -47,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ToastProvider />
           </AuthProvider>
         </LoadingProvider>
+        </MobileSidebarProvider>
       </body>
     </html>
   );

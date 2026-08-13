@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, UserRound, UtensilsCrossed, Images, CalendarClock,
   Inbox, FileText, CalendarCheck, MessageSquare, Star, CreditCard,
-  Crown, Bell, Settings, ShieldCheck, Clock, Home, LogOut,
+  Crown, Bell, Settings, ShieldCheck, Clock, Home, LogOut, X,
 } from 'lucide-react';
 
 const sections = [
@@ -57,9 +57,11 @@ interface SidebarProps {
   caterer: CatererInfo | null;
   profileLoading: boolean;
   onLogoutClick: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function Sidebar({ caterer, profileLoading, onLogoutClick }: SidebarProps) {
+export default function Sidebar({ caterer, profileLoading, onLogoutClick, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   const initials = caterer?.company_name
@@ -67,103 +69,127 @@ export default function Sidebar({ caterer, profileLoading, onLogoutClick }: Side
     : '..';
 
   return (
-    <aside className="w-72 fixed left-0 top-0 h-full bg-white border-r p-4 overflow-y-auto flex flex-col">
-      <div className="mb-6 flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          {profileLoading ? (
-            <div className="animate-pulse space-y-2">
-              <div className="h-5 w-32 bg-gray-200 rounded" />
-              <div className="h-3 w-24 bg-gray-100 rounded" />
-            </div>
-          ) : caterer ? (
-            <Link href="/caterer/profile" className="flex items-center gap-3 group">
-              <div className="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center overflow-hidden shrink-0">
-                {caterer.logo_url ? (
-                  <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.logo_url}`}
-                    alt={caterer.company_name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-orange-700 font-bold text-sm">{initials}</span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-base font-bold text-gray-900 truncate group-hover:text-orange-600 transition-colors">
-                  {caterer.company_name}
-                </h1>
-                <p className="text-xs text-gray-500 truncate">{caterer.location}</p>
-              </div>
-            </Link>
-          ) : (
-            <div>
-              <h1 className="text-xl font-bold text-orange-600">Mon entreprise</h1>
-              <p className="text-xs text-gray-500">Complétez votre profil</p>
-            </div>
-          )}
-        </div>
-
-        <Link
-          href="/"
-          title="Retour à l'accueil"
-          className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors shrink-0"
-        >
-          <Home className="w-4 h-4" strokeWidth={1.75} />
-        </Link>
-      </div>
-
-      {!profileLoading && caterer && (
-        <div className="mb-6 -mt-4">
-          {caterer.verified ? (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2 py-1 rounded-full">
-              <ShieldCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
-              Compte vérifié
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-1 rounded-full">
-              <Clock className="w-3.5 h-3.5" strokeWidth={1.75} />
-              En attente de validation
-            </span>
-          )}
-        </div>
+    <>
+      {/* Overlay sombre sur mobile quand la sidebar est ouverte */}
+      {isOpen && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+        />
       )}
 
-      <nav className="space-y-6 flex-1">
-        {sections.map((section) => (
-          <div key={section.title}>
-            <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-              {section.title}
-            </p>
-            <div className="space-y-1">
-              {section.items.map(({ label, href, icon: Icon }) => {
-                const isActive = pathname === href;
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
-                      isActive ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" strokeWidth={1.75} />
-                    {label}
-                  </Link>
-                );
-              })}
-            </div>
+      <aside
+        className={`w-72 fixed left-0 top-0 h-full bg-white border-r p-4 overflow-y-auto flex flex-col z-50 transition-transform duration-300 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
+        <div className="mb-6 flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            {profileLoading ? (
+              <div className="animate-pulse space-y-2">
+                <div className="h-5 w-32 bg-gray-200 rounded" />
+                <div className="h-3 w-24 bg-gray-100 rounded" />
+              </div>
+            ) : caterer ? (
+              <Link href="/caterer/profile" onClick={onClose} className="flex items-center gap-3 group">
+                <div className="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center overflow-hidden shrink-0">
+                  {caterer.logo_url ? (
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.logo_url}`}
+                      alt={caterer.company_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-orange-700 font-bold text-sm">{initials}</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-base font-bold text-gray-900 truncate group-hover:text-orange-600 transition-colors">
+                    {caterer.company_name}
+                  </h1>
+                  <p className="text-xs text-gray-500 truncate">{caterer.location}</p>
+                </div>
+              </Link>
+            ) : (
+              <div>
+                <h1 className="text-xl font-bold text-orange-600">Mon entreprise</h1>
+                <p className="text-xs text-gray-500">Complétez votre profil</p>
+              </div>
+            )}
           </div>
-        ))}
-      </nav>
 
-      <div className="pt-4 mt-4 border-t border-gray-200">
-        <button
-          onClick={onLogoutClick}
-          className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
-        >
-          <LogOut className="w-4 h-4" strokeWidth={1.75} />
-          Se déconnecter
-        </button>
-      </div>
-    </aside>
+          <div className="flex items-center gap-1 shrink-0">
+            <Link
+              href="/"
+              title="Retour à l'accueil"
+              className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+            >
+              <Home className="w-4 h-4" strokeWidth={1.75} />
+            </Link>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors lg:hidden"
+              aria-label="Fermer le menu"
+            >
+              <X className="w-4 h-4" strokeWidth={1.75} />
+            </button>
+          </div>
+        </div>
+
+        {!profileLoading && caterer && (
+          <div className="mb-6 -mt-4">
+            {caterer.verified ? (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2 py-1 rounded-full">
+                <ShieldCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
+                Compte vérifié
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-1 rounded-full">
+                <Clock className="w-3.5 h-3.5" strokeWidth={1.75} />
+                En attente de validation
+              </span>
+            )}
+          </div>
+        )}
+
+        <nav className="space-y-6 flex-1">
+          {sections.map((section) => (
+            <div key={section.title}>
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                {section.title}
+              </p>
+              <div className="space-y-1">
+                {section.items.map(({ label, href, icon: Icon }) => {
+                  const isActive = pathname === href;
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={onClose}
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
+                        isActive ? 'bg-orange-50 text-orange-700 font-medium' : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" strokeWidth={1.75} />
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div className="pt-4 mt-4 border-t border-gray-200">
+          <button
+            onClick={onLogoutClick}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="w-4 h-4" strokeWidth={1.75} />
+            Se déconnecter
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

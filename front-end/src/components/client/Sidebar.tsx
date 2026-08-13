@@ -5,20 +5,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Search,
-  Heart,
-  FileText,
-  ReceiptText,
-  CalendarCheck,
-  MessageSquare,
-  Settings,
-  LogOut,
-  Home,
-  Bell
+  LayoutDashboard, Search, Heart, FileText, ReceiptText,
+  CalendarCheck, MessageSquare, Settings, LogOut, Home, Bell, X,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useMobileSidebar } from '@/context/MobileSidebarContext';
 import LogoutConfirmModal from '@/components/shared/LogoutConfirmModal';
 
 const navItems = [
@@ -41,6 +33,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [client, setClient] = useState<ClientInfo | null>(null);
   const { logout } = useAuth();
+  const { isOpen, close } = useMobileSidebar();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -59,33 +52,48 @@ export default function Sidebar() {
   const handleConfirmLogout = async () => {
     setLoggingOut(true);
     await logout();
-    // pas besoin de reset loggingOut : logout() redirige normalement
   };
 
   return (
     <>
-      <aside className="h-screen w-64 fixed left-0 top-0 flex flex-col py-6 px-4 bg-white border-r border-[#dfc0ba] z-50">
+      {isOpen && <div onClick={close} className="fixed inset-0 bg-black/40 z-40 lg:hidden" />}
+
+      <aside
+        className={`h-screen w-64 fixed left-0 top-0 flex flex-col py-6 px-4 bg-white border-r border-[#dfc0ba] z-50 transition-transform duration-300 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } lg:translate-x-0`}
+      >
         <div className="mb-6 px-2 flex items-center justify-between">
           <div>
             <span className="text-xl font-bold text-[#9b2f1e]">Saffron Hearth</span>
             <p className="text-xs text-[#58423d]">Espace client</p>
           </div>
-          <Link
-            href="/"
-            title="Retour à l'accueil"
-            className="p-2 text-[#58423d] hover:text-[#9b2f1e] hover:bg-[#f3ede6] rounded-lg transition-colors"
-          >
-            <Home className="w-4 h-4" strokeWidth={1.75} />
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link
+              href="/"
+              title="Retour à l'accueil"
+              className="p-2 text-[#58423d] hover:text-[#9b2f1e] hover:bg-[#f3ede6] rounded-lg transition-colors"
+            >
+              <Home className="w-4 h-4" strokeWidth={1.75} />
+            </Link>
+            <button
+              onClick={close}
+              className="p-2 text-[#58423d] hover:text-[#9b2f1e] hover:bg-[#f3ede6] rounded-lg transition-colors lg:hidden"
+              aria-label="Fermer le menu"
+            >
+              <X className="w-4 h-4" strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
 
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto">
           {navItems.map(({ label, href, icon: Icon }) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
+                onClick={close}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
                   isActive
                     ? 'bg-[#ffdad4] text-[#9b2f1e] font-bold'
@@ -102,6 +110,7 @@ export default function Sidebar() {
         <div className="mt-auto pt-4 border-t border-[#dfc0ba] space-y-1">
           <Link
             href="/client/settings"
+            onClick={close}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
               pathname === '/client/settings'
                 ? 'bg-[#ffdad4] text-[#9b2f1e] font-bold'
