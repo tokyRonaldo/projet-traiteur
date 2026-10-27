@@ -4,30 +4,65 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useLogout } from '@/hooks/useLogout';
+import LogoutConfirmModal from '@/components/shared/LogoutConfirmModal';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminHeader from '@/components/admin/AdminHeader';
+
+interface AdminUser {
+  name: string;
+  email: string;
+  roles: { name: string }[];
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
+  const [checking, setChecking] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { modalOpen, loading, requestLogout, cancelLogout, confirmLogout } = useLogout('/login');
 
   useEffect(() => {
-    api.get('user')
+    api
+      .get('user')
       .then((user) => {
-        const isAdmin = user?.roles?.some((r: any) => r.name === 'admin');
-        if (!isAdmin) router.push('/login');
+        const isAdmin = user?.roles?.some((r: { name: string }) => r.name === 'admin');
+        if (!isAdmin) {
+          router.push('/login');
+          return;
+        }
+        setAdmin(user);
       })
       .catch(() => router.push('/login'))
-      .finally(() => setLoading(false));
+      .finally(() => setChecking(false));
   }, [router]);
 
-  if (loading) {
-    return <div className="flex h-screen items-center justify-center">Chargement...</div>;
+  if (checking) {
+    return <div className="flex h-screen items-center justify-center text-gray-500">Chargement...</div>;
   }
+  if (!admin) return null;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar />
-      <main className="flex-1 p-6">{children}</main>
+    <div className="min-h-screen bg-gray-50">
+      <AdminSidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onLogoutClick={requestLogout}
+      />
+
+      <div className="lg:ml-64">
+        <AdminHeader
+          name={admin.name}
+          email={admin.email}
+          onMenuClick={() => setSidebarOpen(true)}
+          onLogoutClick={requestLogout}
+        />
+        <main className="pt-20 p-4 md:p-8">{children}</main>
+      </div>
+
+      {modalOpen && (
+        <LogoutConfirmModal onConfirm={confirmLogout} onCancel={cancelLogout} loading={loading} />
+      )}
     </div>
   );
 }

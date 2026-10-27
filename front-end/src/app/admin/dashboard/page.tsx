@@ -11,11 +11,9 @@ export default function DashboardPage() {
   const [revenue, setRevenue] = useState([]);
 
   useEffect(() => {
-    alert('test');
     api.get('admin/dashboard').then(setStats);
     api.get('admin/dashboard/registrations-chart').then(setRegistrations);
     api.get('admin/dashboard/revenue-chart').then(setRevenue);
-    alert('test2');
   }, []);
 
   const cards = stats

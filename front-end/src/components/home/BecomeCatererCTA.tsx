@@ -4,7 +4,7 @@ import { Button } from "../ui/Button";
 
 export default function BecomeCatererCTA() {
   return (
-    <section id="how-it-works" className="py-12 px-6">
+    <section  className="py-12 px-6">
       <div className="max-w-7xl mx-auto bg-primary rounded-[2rem] p-12 lg:p-20 relative overflow-hidden text-white shadow-2xl">
         <div className="relative z-10 max-w-2xl">
           <h2 className="text-4xl lg:text-5xl font-black mb-6">Vous êtes traiteur ?</h2>
@@ -17,7 +17,7 @@ export default function BecomeCatererCTA() {
               <Link href="/register/caterer">Commencer à vendre</Link>
             </Button>
             <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10" asChild>
-              <Link href="/#categories">En savoir plus</Link>
+              <Link href="#categories">En savoir plus</Link>
             </Button>
           </div>
         </div>

@@ -107,7 +107,7 @@ export default function Bookings() {
     thisMonth: thisMonthBookings.length,
     revenue: thisMonthBookings
       .filter((b) => b.status !== 'cancelled')
-      .reduce((sum, b) => sum + (b.price ?? 0), 0),
+      .reduce((sum, b) => sum + Number(b.price ?? 0), 0),
     completed: bookings.filter((b) => getDisplayStatus(b).key === 'completed').length,
     guests: thisMonthBookings.reduce((sum, b) => sum + b.guests_number, 0),
   };

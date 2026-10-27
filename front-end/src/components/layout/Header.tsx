@@ -33,7 +33,7 @@ export default function Header() {
 
   if (authLoading) {
     return (
-      <header className="sticky top-0 z-50 bg-background-light/50 dark:bg-background-dark/50 backdrop-blur-xl border-b border-primary/10">
+      <header className="sticky top-0 z-50 bg-transparent backdrop-blur-xl border-b border-primary/10">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/"><span className="font-bold text-xl">Caterly</span></Link>
           <div className="h-10 w-32 bg-muted animate-pulse rounded-md" />
@@ -52,14 +52,15 @@ export default function Header() {
         />
       )}
 
-      <header className="sticky top-0 z-50 bg-background dark:bg-background-dark md:bg-background-light/50 md:dark:bg-background-dark/50 backdrop-blur-xl border-b border-primary/10">
+      <header className="sticky top-0 z-50 bg-transparent backdrop-blur-xl border-b border-primary/10">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/"><span className="font-bold text-xl">Caterly</span></Link>
 
           <div className="hidden md:flex items-center gap-8">
+            <Link href="/" className="text-sm font-semibold hover:text-primary transition-colors">Accueil</Link>
             <Link href="/caterer" className="text-sm font-semibold hover:text-primary transition-colors">Traiteurs</Link>
-            <Link href="#categories" className="text-sm font-semibold hover:text-primary transition-colors">Catégories</Link>
-            <Link href="#how-it-works" className="text-sm font-semibold hover:text-primary transition-colors">Comment ça marche</Link>
+            <Link href="/#categories" className="text-sm font-semibold hover:text-primary transition-colors">Catégories</Link>
+            <Link href="/#how-it-works" className="text-sm font-semibold hover:text-primary transition-colors">Comment ça marche</Link>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -93,9 +94,10 @@ export default function Header() {
           {isOpen && (
             <div className="md:hidden absolute top-full left-0 right-0 md:bg-background-light md:dark:bg-background-dark bg-background dark:bg-background-dark border-b border-primary/10 shadow-lg">
               <div className="px-6 py-8 flex flex-col gap-6 text-center">
+                <Link href="/" className="text-sm font-semibold hover:text-primary transition-colors">Accueil</Link>
                 <Link href="/caterers" className="text-lg font-semibold py-2" onClick={closeMenu}>Traiteurs</Link>
-                <Link href="#categories" className="text-lg font-semibold py-2" onClick={closeMenu}>Catégories</Link>
-                <Link href="#how-it-works" className="text-lg font-semibold py-2" onClick={closeMenu}>Comment ça marche</Link>
+                <Link href="/#categories" className="text-lg font-semibold py-2" onClick={closeMenu}>Catégories</Link>
+                <Link href="/#how-it-works" className="text-lg font-semibold py-2" onClick={closeMenu}>Comment ça marche</Link>
 
                 <div className="flex flex-col gap-3 pt-6 border-t border-primary/10">
                   {isAuthenticated ? (

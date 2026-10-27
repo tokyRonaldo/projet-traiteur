@@ -287,7 +287,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::put('admin/profile', [AdminProfileController::class, 'update']);
     Route::put('admin/profile/password', [AdminProfileController::class, 'updatePassword']);
 
-
+    // routes/api.php (groupe admin)
+    Route::post('admin/category/{id}/image', [AdminCategoryController::class, 'uploadImage']);
 });
 
 //pour admin

@@ -9,6 +9,7 @@ interface Category {
   id: number;
   name: string;
   type: string;
+  image_url: string | null;
 }
 
 export default function EventCategories() {
@@ -18,7 +19,6 @@ export default function EventCategories() {
     api.get('public/categories').then(setCategories).catch(() => setCategories([]));
   }, []);
 
-  if (categories.length === 0) return null;
 
   return (
     <section id="categories" className="py-20 bg-background-light dark:bg-background-dark">
@@ -29,8 +29,8 @@ export default function EventCategories() {
             <CategoryCard
               key={cat.id}
               title={cat.name}
-              description={cat.type === 'evenement' ? "Trouvez le traiteur idéal" : 'Découvrez cette spécialité'}
-              image=""
+              description={cat.type === 'evenement' ? 'Trouvez le traiteur idéal' : 'Découvrez cette spécialité'}
+              image={cat.image_url}
             />
           ))}
         </div>

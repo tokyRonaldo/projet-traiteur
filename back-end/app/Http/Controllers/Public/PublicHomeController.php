@@ -41,12 +41,24 @@ class PublicHomeController extends Controller
         return response()->json($data);
     }
 
-    // GET /public/categories
+    // app/Http/Controllers/Public/PublicHomeController.php
     public function categories()
     {
-        return response()->json(Category::orderBy('name')->get());
-    }
+        $categories = Category::orderBy('name')->get();
 
+        $images = Media::where('entity_type', 'category')
+            ->whereIn('entity_id', $categories->pluck('id'))
+            ->get()
+            ->keyBy('entity_id');
+
+        return response()->json($categories->map(fn ($c) => [
+            'id' => $c->id,
+            'name' => $c->name,
+            'type' => $c->type,
+            'image_url' => $images->get($c->id)?->url,
+        ]));
+    }
+    
     // GET /public/reviews/featured
     public function featuredReviews()
     {

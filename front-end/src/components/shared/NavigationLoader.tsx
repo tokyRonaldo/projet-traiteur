@@ -19,10 +19,15 @@ export default function NavigationLoader() {
       if (!target) return;
 
       const href = target.getAttribute('href');
-      if (!href || href.startsWith('#') || href.startsWith('http') || target.target === '_blank') {
+      if (
+        !href ||
+        href.startsWith('#') ||
+        href.startsWith('http') ||
+        target.target === '_blank' ||
+        href.startsWith('/#')
+      ) {
         return;
       }
-
       // Évite de redéclencher si on clique sur le lien de la page actuelle
       if (href === pathname) return;
 

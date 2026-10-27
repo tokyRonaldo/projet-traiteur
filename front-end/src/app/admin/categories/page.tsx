@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { apiUpload } from '@/lib/apiUpload';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -43,6 +44,21 @@ export default function CategoriesPage() {
     if (!confirm('Supprimer cette catégorie ?')) return;
     await api.delete(`admin/category/delete/${id}`);
     load();
+  };
+
+  const handleImageChange = async (catId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      await apiUpload(`admin/category/${catId}/image`, formData);
+      load(); // recharge la liste
+    } catch (err: any) {
+      alert(err.message || "Impossible d'envoyer l'image.");
+    }
   };
 
   return (
@@ -87,6 +103,24 @@ export default function CategoriesPage() {
           {categories.map((cat) => (
             <div key={cat.id} className="flex justify-between items-center p-3">
               <div>
+                {/* dans chaque ligne de catégorie, avant le nom */}
+                <label className="w-14 h-14 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center cursor-pointer shrink-0 hover:ring-2 hover:ring-indigo-300 transition">
+                  {cat.image_url ? (
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_API_URL}${cat.image_url}`}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[10px] text-gray-400 text-center px-1">+ Image</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleImageChange(cat.id, e)}
+                  />
+                </label>
                 <p className="font-medium">{cat.name}</p>
                 <p className="text-xs text-gray-500">{cat.type}</p>
               </div>

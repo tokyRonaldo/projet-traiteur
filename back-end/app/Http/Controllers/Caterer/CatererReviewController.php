@@ -1,4 +1,3 @@
-// app/Http/Controllers/Caterer/CatererReviewController.php
 <?php
 
 namespace App\Http\Controllers\Caterer;

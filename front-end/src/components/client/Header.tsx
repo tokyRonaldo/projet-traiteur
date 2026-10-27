@@ -142,10 +142,10 @@ export default function Header() {
             )}
           </Link>
 
-          <button className="hidden lg:flex text-sm font-semibold text-[#58423d] hover:text-[#9b2f1e] transition-colors items-center gap-1">
+          {/*<button className="hidden lg:flex text-sm font-semibold text-[#58423d] hover:text-[#9b2f1e] transition-colors items-center gap-1">
             <LifeBuoy className="w-4 h-4" strokeWidth={1.75} />
             Assistance
-          </button>
+          </button>*/}
 
           <button
             onClick={() => router.push('/client/requests/new')}

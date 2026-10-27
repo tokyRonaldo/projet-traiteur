@@ -39,22 +39,20 @@ export function useLoginUser() {
         throw new Error(result.message || 'Login failed');
       }
 
-      saveAuthentication(result.token, result.user,result.role);
-      if(result.role == 'traiteur'){
-        router.push('/caterer/dashboard');
+      saveAuthentication(result.token, result.user, result.role);
 
-      }
-      else if(result.role == 'client'){
-        const redirect = searchParams.get("redirect");
-        if(redirect){
-            router.push(redirect);
-        }else{
-            router.push("/client/dashboard");
+      if (result.role === 'traiteur') {
+        window.location.href = '/caterer/dashboard';
+      } else if (result.role === 'client') {
+        const redirect = searchParams.get('redirect');
+
+        if (redirect) {
+          window.location.href = redirect;
+        } else {
+          window.location.href = '/client/dashboard';
         }
-        router.push('/client/dashboard');
-      }
-      else{
-        router.push('/admin/dashboard');
+      } else {
+        window.location.href = '/admin/dashboard';
       }
 
       console.log(result.role);

@@ -52,7 +52,7 @@ export default function CatererLayout({ children }: { children: React.ReactNode 
           onLogoutClick={requestLogout}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <div className="p-4 md:p-6 pt-24 max-w-[1200px] mx-auto">{children}</div>
+        <div className="p-4 pt-24 max-w-[1200px] mx-auto">{children}</div>
       </main>
 
       {modalOpen && (

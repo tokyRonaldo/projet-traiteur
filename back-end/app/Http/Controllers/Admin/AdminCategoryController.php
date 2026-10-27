@@ -5,13 +5,53 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Models\Media;
+use Illuminate\Support\Facades\Storage;
 
 class AdminCategoryController extends Controller
 {
-    // GET admin/categories
+    // GET admin/categories : même enrichissement que ci-dessus
     public function index()
     {
-        return response()->json(Category::latest()->get());
+        $categories = Category::latest()->get();
+
+        $images = Media::where('entity_type', 'category')
+            ->whereIn('entity_id', $categories->pluck('id'))
+            ->get()
+            ->keyBy('entity_id');
+
+        return response()->json($categories->map(fn ($c) => [
+            'id' => $c->id,
+            'name' => $c->name,
+            'type' => $c->type,
+            'image_url' => $images->get($c->id)?->url,
+        ]));
+    }
+
+    // POST admin/category/{id}/image
+    public function uploadImage(Request $request, $id)
+    {
+        $category = Category::findOrFail($id);
+        $request->validate(['image' => 'required|image|max:2048']);
+
+        // Une seule image par catégorie : on remplace l'ancienne
+        $existing = Media::where('entity_type', 'category')->where('entity_id', $category->id)->first();
+        if ($existing) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $existing->url));
+            $existing->delete();
+        }
+
+        $path = $request->file('image')->store('category-images', 'public');
+
+        $media = Media::create([
+            'entity_type' => 'category',
+            'entity_id' => $category->id,
+            'url' => Storage::url($path),
+            'type' => 'image',
+            'position' => 0,
+        ]);
+
+        return response()->json(['image_url' => $media->url], 201);
     }
 
     // POST admin/category/store
@@ -47,10 +87,17 @@ class AdminCategoryController extends Controller
         ]);
     }
 
-    // DELETE admin/category/delete/{id}
+    // DELETE admin/category/delete/{id} : nettoie aussi l'image
     public function destroy($id)
     {
         $category = Category::findOrFail($id);
+
+        $media = Media::where('entity_type', 'category')->where('entity_id', $category->id)->first();
+        if ($media) {
+            Storage::disk('public')->delete(str_replace('/storage/', '', $media->url));
+            $media->delete();
+        }
+
         $category->delete();
 
         return response()->json(['message' => 'Catégorie supprimée']);
