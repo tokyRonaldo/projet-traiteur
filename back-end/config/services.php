@@ -43,4 +43,6 @@ return [
         'model_secours'  => env('GEMINI_MODEL_SECOURS'),
         'timeout'        => (int) env('GEMINI_TIMEOUT', 25),
     ],
+
+    'n8n' => ['send_devis_url' => env('N8N_SEND_DEVIS_URL')],
 ];

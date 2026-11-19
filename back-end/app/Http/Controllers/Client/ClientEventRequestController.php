@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\EventRequest;
 use Illuminate\Http\Request;
+use App\Models\Caterer; 
+use App\Services\NotificationService;
 
 class ClientEventRequestController extends Controller
 {
@@ -55,6 +57,18 @@ class ClientEventRequestController extends Controller
             'status' => 'pending',
         ]);
 
+        $caterer = Caterer::with('user')->find($validated['caterer_id']);
+        if ($caterer?->user) {
+            NotificationService::send(
+                $caterer->user,
+                'new_request',
+                'Nouvelle demande reçue',
+                "{$request->user()->name} vous a envoyé une demande : {$eventRequest->event_type} pour {$eventRequest->guests_number} invités.",
+                '/caterer/requests'
+            );
+        }
+
         return response()->json(['message' => 'Demande envoyée', 'event_request' => $eventRequest], 201);
+
     }
 }

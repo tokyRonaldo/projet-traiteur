@@ -9,6 +9,9 @@ use App\Models\Booking;
 use App\Models\EventRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\Log; 
+use App\Services\NotificationService;
 
 
 class CatererQuoteController extends Controller
@@ -39,7 +42,6 @@ class CatererQuoteController extends Controller
         return response()->json($quote);
     }
 
-    // POST caterer/quote/store
     public function store(Request $request)
     {
         $caterer = $request->user()->caterer;
@@ -50,83 +52,61 @@ class CatererQuoteController extends Controller
             'message' => 'nullable|string|max:2000',
         ]);
 
-        // Vérifie que la demande appartient bien à ce traiteur
         $eventRequest = EventRequest::where('id', $validated['event_request_id'])
             ->where('caterer_id', $caterer->id)
             ->firstOrFail();
 
-        $quote = Quote::create([
-            ...$validated,
-            'caterer_id' => $caterer->id,
-            'status' => 'sent',
-            'sent_at' => now(),
-        ]);
+        // Création du devis + changement de statut de la demande : tout ou rien
+        $quote = DB::transaction(function () use ($validated, $caterer, $eventRequest) {
+            $quote = Quote::create([
+                ...$validated,
+                'caterer_id' => $caterer->id,
+                'status' => 'sent',
+                'sent_at' => now(),
+            ]);
+            $eventRequest->update(['status' => 'responded']);
+
+            return $quote;
+        });
 
         $client = User::find($eventRequest->client_id);
+        $frontend = config('app.frontend_url');
 
-        // URL frontend
-        $urlAccepted = config('app.frontend_url')
-            ."/client/quote/".$quote->id."/accept";
-
-
-        $urlRejected = config('app.frontend_url')
-            ."/client/quote/".$quote->id."/reject";
-
-        $resp = Http::post(
-                'http://localhost:5678/webhook-test/send-devis',
-                [
-
-                    'caterer' => [
-                        'id' => $caterer->id,
-                        'name' => $caterer->name,
-                    ],
-
-
-                    'client' => [
-                        'id' => $client->id,
-                        'name' => $client->name,
-                        'email' => $client->email,
-                    ],
-
-
-                    'event_request' => [
-                        'id' => $eventRequest->id,
-                        'event_type' => $eventRequest->event_type,
-                        'event_date' => $eventRequest->event_date,
-                        'guests_number' => $eventRequest->guests_number,
-                    ],
-
-
-                    'quote' => [
-                        'id' => $quote->id,
-                        'price' => $quote->proposed_price,
-                        'message' => $quote->message,
-                    ],
-
-
-                    'url_accepted' => $urlAccepted,
-
-                    'url_rejected' => $urlRejected,
-
-                ]
-            );
-
-        // 🔥 vérifier si n8n a répondu correctement
-        if (!$resp->successful()) {
-            return response()->json([
-                'status' => 500,
-                'msg' => 'Erreur webhook n8n',
-                'error' => $resp->body()
-            ], 500);
+        // Email via n8n : s'il échoue, le devis reste valide
+        $emailEnvoye = false;
+        try {
+            $resp = Http::timeout(10)->post(config('services.n8n.send_devis_url'), [
+                'caterer' => ['id' => $caterer->id, 'name' => $caterer->company_name ?? $caterer->name],
+                'client' => ['id' => $client->id, 'name' => $client->name, 'email' => $client->email],
+                'event_request' => [
+                    'id' => $eventRequest->id,
+                    'event_type' => $eventRequest->event_type,
+                    'event_date' => $eventRequest->event_date,
+                    'guests_number' => $eventRequest->guests_number,
+                ],
+                'quote' => ['id' => $quote->id, 'price' => $quote->proposed_price, 'message' => $quote->message],
+                'url_accepted' => "$frontend/client/quote/{$quote->id}/accept",
+                'url_rejected' => "$frontend/client/quote/{$quote->id}/reject",
+            ]);
+            $emailEnvoye = $resp->successful();
+        } catch (\Throwable $e) {
+            Log::warning('Webhook n8n injoignable', ['message' => $e->getMessage()]);
         }
 
+        if (!$emailEnvoye) {
+            Log::warning('Email du devis non envoyé via n8n', ['quote_id' => $quote->id]);
+        }
 
-
-
-        $eventRequest->update(['status' => 'responded']);
-
+        NotificationService::inApp(
+            $client,
+            'quote_received',
+            'Nouveau devis reçu',
+            ($caterer->company_name ?? 'Un traiteur') . " vous a envoyé un devis de {$quote->proposed_price} €."
+        );
+        
         return response()->json([
             'message' => 'Devis envoyé avec succès',
+            'email_sent' => $emailEnvoye,
             'quote' => $quote->load('eventRequest.client'),
         ], 201);
     }

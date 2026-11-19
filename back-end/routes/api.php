@@ -45,7 +45,8 @@ use App\Http\Controllers\Client\{
     ClientProfileController,
     ClientEventRequestController,
     ClientCatererProfileController,
-    ClientNotificationController
+    ClientNotificationController,
+    ClientAssistantController
     };
 
 use App\Http\Controllers\Public\PublicHomeController;
@@ -139,6 +140,10 @@ Route::middleware(['auth:sanctum', 'role:client'])->prefix('client')->group(func
 
     Route::get('messages/recent', [ClientMessageController::class, 'recent']);
     Route::get('bookings/next', [ClientBookingController::class, 'next']);
+
+    // routes/api.php, dans le groupe client
+    Route::post('assistant/find-caterers', [ClientAssistantController::class, 'findCaterers'])
+        ->middleware('throttle:10,1');
 
 });
 
