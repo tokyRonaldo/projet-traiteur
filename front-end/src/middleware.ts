@@ -1,3 +1,4 @@
+// middleware.ts
 import { NextRequest, NextResponse } from "next/server";
 
 const routePermissions = [
@@ -15,6 +16,16 @@ const routePermissions = [
   },
 ];
 
+// Page d'accueil de chaque rôle (utilisée quand un utilisateur connecté va sur /login ou /register)
+const roleHome: Record<string, string> = {
+  client: "/client/dashboard",
+  traiteur: "/caterer/dashboard",
+  admin: "/admin/dashboard",
+};
+
+// Pages de connexion
+const authRoutes = ["/login", "/register"];
+
 // Routes publiques (non protégées)
 const publicRoutes = [
   "/caterer",
@@ -26,6 +37,21 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const role = request.cookies.get("role")?.value;
   const pathname = request.nextUrl.pathname;
+
+  // Pages de connexion : un utilisateur déjà connecté est renvoyé vers son espace
+  const isAuthRoute = authRoutes.some(route => {
+    return pathname === route || pathname.startsWith(route + "/");
+  });
+
+  if (isAuthRoute) {
+    const home = role ? roleHome[role] : undefined;
+
+    if (token && home) {
+      return NextResponse.redirect(new URL(home, request.url));
+    }
+
+    return NextResponse.next();
+  }
 
   // Vérifie si la route est publique
   const isPublicRoute = publicRoutes.some(route => {

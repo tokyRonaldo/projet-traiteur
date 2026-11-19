@@ -14,21 +14,27 @@ export default function NavigationLoader() {
 
   // Intercepte tous les clics sur des <a> internes pour démarrer le loader immédiatement
   useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const target = (e.target as HTMLElement).closest('a');
-      if (!target) return;
+      const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a');
 
-      const href = target.getAttribute('href');
+      if (!link) return;
+
+      const href = link.getAttribute('href');
+
       if (
         !href ||
+        link.hasAttribute('download') || // Ignorer les téléchargements CSV
         href.startsWith('#') ||
         href.startsWith('http') ||
-        target.target === '_blank' ||
+        href.startsWith('mailto:') ||
+        href.startsWith('tel:') ||
+        link.target === '_blank' ||
         href.startsWith('/#')
       ) {
         return;
       }
-      // Évite de redéclencher si on clique sur le lien de la page actuelle
+
       if (href === pathname) return;
 
       isNavigating.current = true;

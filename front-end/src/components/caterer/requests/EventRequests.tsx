@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import QuoteCreateModal from '../quotes/QuoteCreateModal';
+import { exportCsv } from '@/lib/exportCsv';
+import FilterPopover, { FilterField, filterInputClass } from '@/components/shared/FilterPopover';
+
 
 interface EventRequestItem {
   id: number;
@@ -57,6 +60,20 @@ export default function EventRequests() {
   const perPage = 4;
   const [quoteModalRequest, setQuoteModalRequest] = useState<EventRequestItem | null>(null);
 
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [minBudget, setMinBudget] = useState('');
+  const [maxBudget, setMaxBudget] = useState('');
+
+  const eventTypes = useMemo(() => Array.from(new Set(requests.map((r) => r.event_type))).sort(), [requests]);
+  const activeFilters = [dateFrom, dateTo, typeFilter, minBudget, maxBudget].filter(Boolean).length;
+
+  const resetFilters = () => {
+    setDateFrom(''); setDateTo(''); setTypeFilter(''); setMinBudget(''); setMaxBudget('');
+  };
+
+
   useEffect(() => {
     setLoading(true);
     api
@@ -78,9 +95,16 @@ export default function EventRequests() {
     return requests.filter((r) => {
       const matchStatus = !statusFilter || r.status === statusFilter;
       const matchSearch = r.client?.name.toLowerCase().includes(search.toLowerCase());
-      return matchStatus && matchSearch;
+      // dans le useMemo "filtered", ajoute ces conditions au return :
+      const day = r.event_date.slice(0, 10);
+      const matchDate = (!dateFrom || day >= dateFrom) && (!dateTo || day <= dateTo);
+      const matchType = !typeFilter || r.event_type === typeFilter;
+      const budget = Number(r.budget ?? 0);
+      const matchBudget = (!minBudget || budget >= Number(minBudget)) && (!maxBudget || budget <= Number(maxBudget));
+      return matchStatus && matchSearch && matchDate && matchType && matchBudget;
+
     });
-  }, [requests, statusFilter, search]);
+  }, [requests, statusFilter, search,dateFrom, dateTo, typeFilter, minBudget,maxBudget]);
 
   const paginated = filtered.slice((page - 1) * perPage, page * perPage);
   const totalPages = Math.ceil(filtered.length / perPage) || 1;
@@ -101,6 +125,29 @@ export default function EventRequests() {
       .toUpperCase();
   };
 
+  const handleExport = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    exportCsv(
+      `demandes-${new Date().toISOString().slice(0, 10)}.csv`,
+      ['Date reçue', 'Client', 'Type', 'Date événement', 'Invités', 'Budget (€)', 'Statut'],
+      filtered.map((r) => [
+        new Date(r.created_at).toLocaleDateString('fr-FR'),
+        r.client.name,
+        r.event_type,
+        new Date(r.event_date).toLocaleDateString('fr-FR'),
+        r.guests_number,
+        r.budget,
+        STATUS_LABELS[r.status],
+      ])
+    );
+  };
+
+
+
+
+// remet la pagination à 1 quand un filtre change
+useEffect(() => setPage(1), [dateFrom, dateTo, typeFilter, minBudget, maxBudget]);
+
   return (
     <div className="relative">
       <div className="flex justify-between items-end mb-6">
@@ -109,11 +156,29 @@ export default function EventRequests() {
           <p className="text-[#58423d]">Gérez vos demandes entrantes et proposez vos offres.</p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#dfc0ba] rounded-lg text-[#58423d] hover:bg-[#f9f3ec] transition-all">
-            <SlidersHorizontal className="w-4 h-4" strokeWidth={1.75} />
-            <span className="text-sm font-semibold">Filtres</span>
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-[#dfc0ba] rounded-lg text-[#58423d] hover:bg-[#f9f3ec] transition-all">
+          <FilterPopover activeCount={activeFilters} onReset={resetFilters}>
+            <FilterField label="Date de l'événement (du)">
+              <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={filterInputClass} />
+            </FilterField>
+            <FilterField label="Date de l'événement (au)">
+              <input type="date" value={dateTo} min={dateFrom} onChange={(e) => setDateTo(e.target.value)} className={filterInputClass} />
+            </FilterField>
+            <FilterField label="Type d'événement">
+              <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className={filterInputClass}>
+                <option value="">Tous</option>
+                {eventTypes.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </FilterField>
+            <div className="grid grid-cols-2 gap-2">
+              <FilterField label="Budget min (€)">
+                <input type="number" min="0" value={minBudget} onChange={(e) => setMinBudget(e.target.value)} className={filterInputClass} />
+              </FilterField>
+              <FilterField label="Budget max (€)">
+                <input type="number" min="0" value={maxBudget} onChange={(e) => setMaxBudget(e.target.value)} className={filterInputClass} />
+              </FilterField>
+            </div>
+          </FilterPopover>
+          <button onClick={handleExport} disabled={filtered.length === 0} className="flex items-center gap-2 px-4 py-2 bg-white border border-[#dfc0ba] rounded-lg text-[#58423d] hover:bg-[#f9f3ec] transition-all disabled:opacity-40">
             <Download className="w-4 h-4" strokeWidth={1.75} />
             <span className="text-sm font-semibold">Exporter</span>
           </button>

@@ -3,25 +3,22 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  SlidersHorizontal,
-  Star,
-  CheckCircle2,
-  XCircle,
-  ImageOff,
-} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Star, CheckCircle2, XCircle, ImageOff } from 'lucide-react';
 import { api } from '@/lib/api';
+import FilterPopover, { FilterField, filterInputClass } from '@/components/shared/FilterPopover';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 
 interface QuoteItem {
   id: number;
-  proposed_price: number;
+  proposed_price: number | string;
   message: string | null;
   status: 'sent' | 'accepted' | 'rejected';
   rejection_reason: string | null;
   caterer: {
     id: number;
     company_name: string;
-    rating: number;
+    rating: number | string;
     logo_url?: string | null;
   };
   event_request: {
@@ -35,14 +32,28 @@ const TABS = [
   { key: 'all', label: 'Tous' },
   { key: 'sent', label: 'En attente' },
   { key: 'accepted', label: 'Acceptés' },
+  { key: 'rejected', label: 'Refusé' },
 ];
 
+const fmt = (n: number | string) => `${Number(n).toLocaleString('fr-FR')} €`;
+
 export default function Quotes() {
+  const router = useRouter();
+
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [processingId, setProcessingId] = useState<number | null>(null);
+
+  // Filtres avancés
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+
+  // Modal accepter / refuser
+  const [dialog, setDialog] = useState<{ type: 'accept' | 'reject'; quote: QuoteItem } | null>(null);
+  const [dialogError, setDialogError] = useState<string | null>(null);
 
   const loadQuotes = () => {
     setLoading(true);
@@ -57,46 +68,62 @@ export default function Quotes() {
     loadQuotes();
   }, []);
 
+  const eventTypes = useMemo(
+    () =>
+      Array.from(new Set(quotes.map((q) => q.event_request?.event_type).filter((t): t is string => Boolean(t)))).sort(),
+    [quotes]
+  );
+
+  const activeFilters = [minPrice, maxPrice, typeFilter].filter(Boolean).length;
+
+  const resetFilters = () => {
+    setMinPrice('');
+    setMaxPrice('');
+    setTypeFilter('');
+  };
+
   const filtered = useMemo(() => {
+    const term = search.toLowerCase();
     return quotes.filter((q) => {
       const matchTab = activeTab === 'all' || q.status === activeTab;
       const matchSearch =
-        q.caterer.company_name.toLowerCase().includes(search.toLowerCase()) ||
-        q.event_request.event_type.toLowerCase().includes(search.toLowerCase());
-      return matchTab && matchSearch;
+        q.caterer?.company_name?.toLowerCase().includes(term) ||
+        q.event_request?.event_type?.toLowerCase().includes(term);
+
+      const price = Number(q.proposed_price);
+      const matchPrice = (!minPrice || price >= Number(minPrice)) && (!maxPrice || price <= Number(maxPrice));
+      const matchType = !typeFilter || q.event_request?.event_type === typeFilter;
+
+      return matchTab && matchSearch && matchPrice && matchType;
     });
-  }, [quotes, activeTab, search]);
+  }, [quotes, activeTab, search, minPrice, maxPrice, typeFilter]);
 
-  const handleAccept = async (quote: QuoteItem) => {
-    if (
-      !confirm(
-        `Accepter ce devis de ${quote.caterer.company_name} pour ${quote.proposed_price.toLocaleString()} € ? Cela confirmera votre réservation et refusera les autres devis en attente pour cet événement.`
-      )
-    )
-      return;
-
-    setProcessingId(quote.id);
-    try {
-      await api.post(`client/quote/${quote.id}/accept`);
-      loadQuotes();
-    } catch (err: any) {
-      alert(err.message || "Impossible d'accepter ce devis.");
-    } finally {
-      setProcessingId(null);
-    }
+  const closeDialog = () => {
+    if (processingId !== null) return;
+    setDialog(null);
+    setDialogError(null);
   };
 
-  const handleReject = async (quote: QuoteItem) => {
-    const reason = prompt('Raison du refus (optionnel) :') ?? '';
-    if (!confirm('Confirmer le refus de ce devis ?')) return;
+  const handleConfirm = async (reason: string) => {
+    if (!dialog) return;
+    const { type, quote } = dialog;
 
     setProcessingId(quote.id);
+    setDialogError(null);
     try {
+      if (type === 'accept') {
+        const res = await api.post(`client/quote/${quote.id}/accept`);
+        // on laisse le modal en chargement : la page change aussitôt
+        router.push(res?.booking_id ? `/client/bookings/${res.booking_id}` : '/client/bookings');
+        return;
+      }
+
       await api.post(`client/quote/${quote.id}/reject`, { reason });
+      setProcessingId(null);
+      setDialog(null);
       loadQuotes();
     } catch (err: any) {
-      alert(err.message || 'Impossible de refuser ce devis.');
-    } finally {
+      setDialogError(err.message || 'Une erreur est survenue.');
       setProcessingId(null);
     }
   };
@@ -104,7 +131,7 @@ export default function Quotes() {
   return (
     <div>
       {/* En-tête */}
-      <div className="flex justify-between items-end mb-6">
+      <div className="flex flex-wrap justify-between items-end gap-3 mb-6">
         <div>
           <h2 className="text-3xl font-bold text-[#1d1b17]">Mes devis</h2>
           <p className="text-[#58423d] mt-1">Comparez et gérez les propositions reçues pour vos événements.</p>
@@ -125,10 +152,43 @@ export default function Quotes() {
               </button>
             ))}
           </div>
-          <button className="flex items-center gap-2 border border-[#dfc0ba] px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-[#f9f3ec] transition-colors">
-            <SlidersHorizontal className="w-4 h-4" strokeWidth={1.75} />
-            Filtrer
-          </button>
+
+          <FilterPopover activeCount={activeFilters} onReset={resetFilters}>
+            <div className="grid grid-cols-2 gap-2">
+              <FilterField label="Prix min (€)">
+                <input
+                  type="number"
+                  min="0"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className={filterInputClass}
+                />
+              </FilterField>
+              <FilterField label="Prix max (€)">
+                <input
+                  type="number"
+                  min="0"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className={filterInputClass}
+                />
+              </FilterField>
+            </div>
+            <FilterField label="Type d'événement">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className={filterInputClass}
+              >
+                <option value="">Tous</option>
+                {eventTypes.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </FilterField>
+          </FilterPopover>
         </div>
       </div>
 
@@ -147,7 +207,11 @@ export default function Quotes() {
 
       {!loading && filtered.length === 0 && (
         <div className="bg-white border border-[#dfc0ba] rounded-xl p-10 text-center">
-          <p className="text-[#58423d]">Aucun devis dans cette catégorie.</p>
+          <p className="text-[#58423d]">
+            {activeFilters > 0 || search || activeTab !== 'all'
+              ? 'Aucun devis ne correspond à ces critères.'
+              : "Vous n'avez pas encore reçu de devis."}
+          </p>
         </div>
       )}
 
@@ -157,13 +221,40 @@ export default function Quotes() {
           <div key={quote.id} className="col-span-12 md:col-span-6 lg:col-span-4">
             <QuoteCard
               quote={quote}
-              onAccept={() => handleAccept(quote)}
-              onReject={() => handleReject(quote)}
+              onAccept={() => setDialog({ type: 'accept', quote })}
+              onReject={() => setDialog({ type: 'reject', quote })}
               processing={processingId === quote.id}
             />
           </div>
         ))}
       </div>
+
+      {dialog && (
+        <ConfirmModal
+          title={dialog.type === 'accept' ? 'Accepter ce devis ?' : 'Refuser ce devis ?'}
+          message={
+            dialog.type === 'accept' ? (
+              <>
+                Vous acceptez le devis de <strong>{dialog.quote.caterer.company_name}</strong> à{' '}
+                <strong>{fmt(dialog.quote.proposed_price)}</strong>. Votre réservation sera confirmée et les autres
+                devis en attente pour cet événement seront refusés.
+              </>
+            ) : (
+              <>
+                Le devis de <strong>{dialog.quote.caterer.company_name}</strong> ({fmt(dialog.quote.proposed_price)})
+                sera refusé.
+              </>
+            )
+          }
+          confirmLabel={dialog.type === 'accept' ? 'Accepter le devis' : 'Refuser le devis'}
+          variant={dialog.type === 'reject' ? 'danger' : 'primary'}
+          withReason={dialog.type === 'reject'}
+          loading={processingId === dialog.quote.id}
+          error={dialogError}
+          onConfirm={handleConfirm}
+          onCancel={closeDialog}
+        />
+      )}
     </div>
   );
 }
@@ -185,13 +276,21 @@ function QuoteCard({
   return (
     <div
       className={`bg-white border rounded-xl p-5 h-full flex flex-col shadow-sm transition-all hover:-translate-y-1 hover:shadow-md ${
-        isAccepted ? 'border-[#9b2f1e]/40' : isRejected ? 'border-[#dfc0ba]/50 opacity-70 grayscale-[0.3]' : 'border-[#dfc0ba]'
+        isAccepted
+          ? 'border-[#9b2f1e]/40'
+          : isRejected
+          ? 'border-[#dfc0ba]/50 opacity-70 grayscale-[0.3]'
+          : 'border-[#dfc0ba]'
       }`}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-lg bg-[#f3ede6] flex items-center justify-center overflow-hidden shrink-0">
           {quote.caterer.logo_url ? (
-            <img src={`${process.env.NEXT_PUBLIC_API_URL}${quote.caterer.logo_url}`} alt="" className="w-full h-full object-cover" />
+            <img
+              src={`${process.env.NEXT_PUBLIC_API_URL}${quote.caterer.logo_url}`}
+              alt=""
+              className="w-full h-full object-cover"
+            />
           ) : (
             <ImageOff className="w-5 h-5 text-[#8b716c]" strokeWidth={1.5} />
           )}
@@ -214,26 +313,20 @@ function QuoteCard({
         )}
       </div>
 
-      <div className="flex items-center gap-2 mb-1">
-        <h3 className="font-bold text-[#1d1b17]">{quote.caterer.company_name}</h3>
-      </div>
+      <h3 className="font-bold text-[#1d1b17] mb-1">{quote.caterer.company_name}</h3>
       <div className="flex items-center gap-1 text-xs text-[#58423d] mb-2">
         <Star className="w-3.5 h-3.5 text-[#7a4b00]" fill="#7a4b00" strokeWidth={1.5} />
-        {quote.caterer.rating.toFixed(1)}
+        {Number(quote.caterer.rating).toFixed(1)}
       </div>
 
       <p className="text-sm text-[#58423d] mb-4">{quote.event_request.event_type}</p>
 
       <div className="flex items-baseline gap-2 mb-4">
-        <span className="text-2xl font-bold text-[#1d1b17]">
-          {quote.proposed_price.toLocaleString()} €
-        </span>
+        <span className="text-2xl font-bold text-[#1d1b17]">{fmt(quote.proposed_price)}</span>
         <span className="text-sm text-[#8b716c]">/ {quote.event_request.guests_number} pers.</span>
       </div>
 
-      {quote.message && (
-        <p className="text-sm text-[#58423d] line-clamp-2 mb-4">{quote.message}</p>
-      )}
+      {quote.message && <p className="text-sm text-[#58423d] line-clamp-2 mb-4">{quote.message}</p>}
 
       {isRejected && quote.rejection_reason && (
         <p className="text-xs text-[#8b716c] italic mb-4">&quot;{quote.rejection_reason}&quot;</p>
@@ -256,7 +349,7 @@ function QuoteCard({
               className="flex items-center justify-center gap-1 bg-[#9b2f1e] text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#872111] transition-colors disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" strokeWidth={1.75} />
-              {processing ? '...' : 'Accepter'}
+              Accepter
             </button>
           </div>
         )}

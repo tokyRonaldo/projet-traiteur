@@ -52,6 +52,8 @@ export default function Requests() {
     total: requests.length,
     pending: requests.filter((r) => r.status === 'pending').length,
     responded: requests.filter((r) => r.status === 'responded').length,
+    accepted: requests.filter((r) => r.status === 'accepted').length,
+    rejected: requests.filter((r) => r.status === 'rejected').length,
   };
 
   return (
@@ -69,7 +71,7 @@ export default function Requests() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white border border-[#dfc0ba] rounded-xl p-4">
           <p className="text-xs font-semibold text-[#58423d] uppercase">Total</p>
           <p className="text-2xl font-bold">{counts.total}</p>
@@ -79,9 +81,14 @@ export default function Requests() {
           <p className="text-2xl font-bold">{counts.pending}</p>
         </div>
         <div className="bg-white border border-[#dfc0ba] rounded-xl p-4">
-          <p className="text-xs font-semibold text-[#58423d] uppercase">Devis reçus</p>
-          <p className="text-2xl font-bold">{counts.responded}</p>
+          <p className="text-xs font-semibold text-[#58423d] uppercase">Acceptées</p>
+          <p className="text-2xl font-bold">{counts.accepted}</p>
         </div>
+        <div className="bg-white border border-[#dfc0ba] rounded-xl p-4">
+          <p className="text-xs font-semibold text-[#58423d] uppercase">Refusées</p>
+          <p className="text-2xl font-bold">{counts.rejected}</p>
+        </div>
+
       </div>
 
       <input

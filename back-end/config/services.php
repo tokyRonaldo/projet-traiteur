@@ -37,4 +37,10 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'gemini' => [
+        'key'            => env('GEMINI_API_KEY'),
+        'model'          => env('GEMINI_MODEL', 'gemini-2.5-flash'),
+        'model_secours'  => env('GEMINI_MODEL_SECOURS'),
+        'timeout'        => (int) env('GEMINI_TIMEOUT', 25),
+    ],
 ];

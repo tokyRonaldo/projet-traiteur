@@ -31,7 +31,8 @@ use App\Http\Controllers\Caterer\{
     CatererProfileController,
     CatererServiceController,
     CatererDashboardController,
-    CatererSearchController
+    CatererSearchController,
+    CatererAssistantController
 };
 
 use App\Http\Controllers\Client\ClientQuoteController;
@@ -222,6 +223,9 @@ Route::middleware(['auth:sanctum', 'role:traiteur'])->prefix('caterer')->group(f
     Route::delete('service/media/{mediaId}', [CatererServiceController::class, 'deleteMedia']);
 
     Route::get('search', [CatererSearchController::class, 'search']);
+
+    Route::post('assistant/chat', [CatererAssistantController::class, 'chat'])->middleware('throttle:20,1');
+    Route::post('assistant/draft-quote-message', [CatererAssistantController::class, 'draftQuoteMessage'])->middleware('throttle:10,1');
 });
 
 

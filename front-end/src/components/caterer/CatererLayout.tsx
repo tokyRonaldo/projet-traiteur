@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { useLogout } from '@/hooks/useLogout';
 import LogoutConfirmModal from '@/components/shared/LogoutConfirmModal';
+import AssistantChat from '@/components/caterer/assistant/AssistantChat';
 import Sidebar from './Sidebar';
 import Header from './Header';
 
@@ -58,6 +59,7 @@ export default function CatererLayout({ children }: { children: React.ReactNode 
       {modalOpen && (
         <LogoutConfirmModal onConfirm={confirmLogout} onCancel={cancelLogout} loading={logoutLoading} />
       )}
+      <AssistantChat />
     </div>
   );
 }

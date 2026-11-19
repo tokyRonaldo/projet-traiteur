@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { api } from '@/lib/api';
+import AiDraftButton from './AiDraftButton';
 
 interface QuoteEditModalProps {
   quote: {
@@ -50,7 +51,7 @@ export default function QuoteEditModal({ quote, onClose, onSaved }: QuoteEditMod
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl">
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl">
         <div className="p-6 border-b border-[#dfc0ba] flex justify-between items-center">
           <h3 className="text-xl font-bold text-[#1d1b17]">Modifier le devis</h3>
           <button onClick={onClose} className="p-2 hover:bg-[#ede7e0] rounded-full transition-colors">
@@ -77,6 +78,13 @@ export default function QuoteEditModal({ quote, onClose, onSaved }: QuoteEditMod
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="w-full border border-[#dfc0ba] rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#9b2f1e]/20 focus:border-[#9b2f1e] outline-none transition-all resize-y"
+            />
+
+            {/* Rédaction assistée : l'aperçu ne remplace le message que si le traiteur clique sur « Utiliser ce texte » */}
+            <AiDraftButton
+              quoteId={quote.id}
+              price={price}
+              onUse={(text) => setMessage(text)}
             />
           </div>
 

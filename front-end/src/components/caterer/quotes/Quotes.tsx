@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import QuoteEditModal from './QuoteEditModal';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 
 interface QuoteItem {
   id: number;
@@ -52,12 +53,19 @@ const STATUS_STYLES: Record<string, string> = {
   rejected: 'bg-[#ffdad6] text-[#93000a]',
 };
 
+const fmt = (n: number | string) => Number(n).toLocaleString('fr-FR');
+
 export default function Quotes() {
   const [quotes, setQuotes] = useState<QuoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [visibleCount, setVisibleCount] = useState(4);
   const [editingQuote, setEditingQuote] = useState<QuoteItem | null>(null);
+
+  // Modal "retirer le devis"
+  const [withdrawTarget, setWithdrawTarget] = useState<QuoteItem | null>(null);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   const loadQuotes = () => {
     setLoading(true);
@@ -83,7 +91,10 @@ export default function Quotes() {
     sent: quotes.filter((q) => q.status === 'sent').length,
     accepted: quotes.filter((q) => q.status === 'accepted').length,
     rejected: quotes.filter((q) => q.status === 'rejected').length,
-    pipeline: quotes.filter((q) => q.status === 'sent').reduce((sum, q) => sum + q.proposed_price, 0),
+    // Number() : l'API renvoie les décimaux sous forme de texte, sinon "+" concatène au lieu d'additionner
+    pipeline: quotes
+      .filter((q) => q.status === 'sent')
+      .reduce((sum, q) => sum + Number(q.proposed_price), 0),
   };
 
   const conversionRate =
@@ -91,15 +102,24 @@ export default function Quotes() {
       ? Math.round((counts.accepted / (counts.sent + counts.accepted)) * 100)
       : 0;
 
-  const handleWithdraw = async (quote: QuoteItem) => {
-    if (!confirm('Retirer ce devis ? Le client ne pourra plus y répondre.')) return;
+  const closeWithdraw = () => {
+    if (withdrawLoading) return;
+    setWithdrawTarget(null);
+    setWithdrawError(null);
+  };
 
-    setQuotes((prev) => prev.filter((q) => q.id !== quote.id));
+  const handleConfirmWithdraw = async () => {
+    if (!withdrawTarget) return;
+    setWithdrawLoading(true);
+    setWithdrawError(null);
     try {
-      await api.delete(`caterer/quote/delete/${quote.id}`);
+      await api.delete(`caterer/quote/delete/${withdrawTarget.id}`);
+      setQuotes((prev) => prev.filter((q) => q.id !== withdrawTarget.id));
+      setWithdrawTarget(null);
     } catch (err: any) {
-      alert(err.message || 'Impossible de retirer ce devis.');
-      loadQuotes();
+      setWithdrawError(err.message || 'Impossible de retirer ce devis.');
+    } finally {
+      setWithdrawLoading(false);
     }
   };
 
@@ -161,13 +181,13 @@ export default function Quotes() {
             </span>
             <span className="text-xs text-[#58423d]">Pipeline en attente</span>
           </div>
-          <p className="text-2xl font-bold">{counts.pipeline.toLocaleString()} €</p>
+          <p className="text-2xl font-bold">{fmt(counts.pipeline)} €</p>
           <p className="text-xs text-[#58423d] mt-1">En attente de réponse client</p>
         </div>
       </div>
 
       {/* Onglets */}
-      <div className="flex items-center gap-6 border-b border-[#dfc0ba] mb-4 px-1">
+      <div className="flex items-center gap-6 border-b border-[#dfc0ba] mb-4 px-1 overflow-x-auto">
         {TABS.map((tab) => (
           <button
             key={tab.key}
@@ -175,7 +195,7 @@ export default function Quotes() {
               setActiveTab(tab.key);
               setVisibleCount(4);
             }}
-            className={`pb-2 font-semibold transition-colors ${
+            className={`pb-2 font-semibold whitespace-nowrap transition-colors ${
               activeTab === tab.key
                 ? 'border-b-2 border-[#9b2f1e] text-[#9b2f1e]'
                 : 'text-[#58423d] hover:text-[#9b2f1e]'
@@ -202,7 +222,7 @@ export default function Quotes() {
         {visible.map((quote) => (
           <div
             key={quote.id}
-            className="bg-white/70 backdrop-blur-sm border border-[#dfc0ba] p-4 rounded-xl flex items-center justify-between hover:shadow-lg transition-all group"
+            className="bg-white/70 backdrop-blur-sm border border-[#dfc0ba] p-4 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-lg transition-all group"
           >
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-lg bg-[#f3ede6] flex items-center justify-center shrink-0">
@@ -221,16 +241,14 @@ export default function Quotes() {
 
             <div className="flex items-center gap-6">
               <div className="text-right">
-                <p className="text-xl font-bold text-[#9b2f1e]">
-                  {quote.proposed_price.toLocaleString()} €
-                </p>
-                <p className="text-xs text-[#58423d]">
-                  {quote.event_request?.guests_number} invités
-                </p>
+                <p className="text-xl font-bold text-[#9b2f1e]">{fmt(quote.proposed_price)} €</p>
+                <p className="text-xs text-[#58423d]">{quote.event_request?.guests_number} invités</p>
               </div>
 
               <div className="flex flex-col items-end gap-1">
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${STATUS_STYLES[quote.status]}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${STATUS_STYLES[quote.status]}`}
+                >
                   {STATUS_LABELS[quote.status]}
                 </span>
                 <p className="text-[10px] text-[#58423d]">
@@ -252,7 +270,7 @@ export default function Quotes() {
                       <Pencil className="w-4 h-4" strokeWidth={1.75} />
                     </button>
                     <button
-                      onClick={() => handleWithdraw(quote)}
+                      onClick={() => setWithdrawTarget(quote)}
                       className="p-2 text-[#58423d] hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
                       title="Retirer le devis"
                     >
@@ -298,6 +316,25 @@ export default function Quotes() {
           quote={editingQuote}
           onClose={() => setEditingQuote(null)}
           onSaved={loadQuotes}
+        />
+      )}
+
+      {withdrawTarget && (
+        <ConfirmModal
+          title="Retirer ce devis ?"
+          message={
+            <>
+              Le devis de <strong>{fmt(withdrawTarget.proposed_price)} €</strong> pour{' '}
+              {withdrawTarget.event_request?.client?.name ?? 'ce client'} sera supprimé. Le client ne pourra plus y
+              répondre.
+            </>
+          }
+          confirmLabel="Retirer le devis"
+          variant="danger"
+          loading={withdrawLoading}
+          error={withdrawError}
+          onConfirm={handleConfirmWithdraw}
+          onCancel={closeWithdraw}
         />
       )}
     </div>
