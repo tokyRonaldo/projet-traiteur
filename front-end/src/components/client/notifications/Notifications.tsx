@@ -28,7 +28,9 @@ export default function Notifications() {
     setLoading(true);
     api
       .get('client/notifications')
-      .then((res) => setNotifications(res.data ?? res))
+      .then((res) => {
+        setNotifications(res.data ?? res)
+      })
       .catch(() => setNotifications([]))
       .finally(() => setLoading(false));
   };
@@ -98,7 +100,8 @@ export default function Notifications() {
 
       <div className="space-y-2">
         {notifications.map((n) => {
-          const Icon = TYPE_ICONS[n.type];
+          const Icon = TYPE_ICONS[n.type] ?? Info;
+          const style = TYPE_STYLES[n.type] ?? TYPE_STYLES.info;
           return (
             <div
               key={n.id}
@@ -107,7 +110,7 @@ export default function Notifications() {
                 n.is_read ? 'border-[#dfc0ba]' : 'border-[#9b2f1e]/30 bg-[#fef8f1]'
               }`}
             >
-              <span className={`p-2 rounded-lg shrink-0 ${TYPE_STYLES[n.type]}`}>
+              <span className={`p-2 rounded-lg shrink-0 ${style}`}>
                 <Icon className="w-5 h-5" strokeWidth={1.75} />
               </span>
               <div className="flex-1">

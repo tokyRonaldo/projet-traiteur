@@ -65,7 +65,7 @@ export default function Sidebar() {
       >
         <div className="mb-6 px-2 flex items-center justify-between">
           <div>
-            <span className="text-xl font-bold text-[#9b2f1e]">Saffron Hearth</span>
+            <span className="text-xl font-bold text-[#9b2f1e]">{client?.name ?? 'Client'}</span>
             <p className="text-xs text-[#58423d]">Espace client</p>
           </div>
           <div className="flex items-center gap-1">

@@ -29,8 +29,6 @@ const authRoutes = ["/login", "/register"];
 // Routes publiques (non protégées)
 const publicRoutes = [
   "/caterer",
-  "/caterer/test",
-  "/caterer/public",
 ];
 
 export function middleware(request: NextRequest) {
@@ -54,9 +52,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Vérifie si la route est publique
-  const isPublicRoute = publicRoutes.some(route => {
-    return pathname === route || pathname.startsWith(route + "/");
-  });
+  const isPublicRoute = publicRoutes.includes(pathname);
 
   if (isPublicRoute) {
     return NextResponse.next();
