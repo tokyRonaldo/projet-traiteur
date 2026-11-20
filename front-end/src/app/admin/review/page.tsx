@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import DataTable from '@/components/admin/DataTable';
+import ReviewsAiScan from '@/components/admin/ai/ReviewsAiScan';
 
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<any[]>([]);
@@ -29,6 +30,7 @@ export default function ReviewsPage() {
 
   return (
     <div className="space-y-4">
+      <ReviewsAiScan />
       <h1 className="text-2xl font-bold">Avis</h1>
       <DataTable
         loading={loading}

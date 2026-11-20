@@ -8,6 +8,8 @@ import { Star, CheckCircle2, XCircle, ImageOff } from 'lucide-react';
 import { api } from '@/lib/api';
 import FilterPopover, { FilterField, filterInputClass } from '@/components/shared/FilterPopover';
 import ConfirmModal from '@/components/shared/ConfirmModal';
+import { Scale } from 'lucide-react'; // ajoute Scale à ton import lucide-react existant
+import QuoteCompareModal from './QuoteCompareModal';
 
 interface QuoteItem {
   id: number;
@@ -45,6 +47,14 @@ export default function Quotes() {
   const [activeTab, setActiveTab] = useState('all');
   const [search, setSearch] = useState('');
   const [processingId, setProcessingId] = useState<number | null>(null);
+
+  const [selected, setSelected] = useState<number[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+
+  const toggleSelect = (id: number) =>
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length >= 4 ? prev : [...prev, id]
+    );
 
   // Filtres avancés
   const [minPrice, setMinPrice] = useState('');
@@ -224,10 +234,34 @@ export default function Quotes() {
               onAccept={() => setDialog({ type: 'accept', quote })}
               onReject={() => setDialog({ type: 'reject', quote })}
               processing={processingId === quote.id}
+              selected={selected.includes(quote.id)}
+              onToggleSelect={() => toggleSelect(quote.id)}
             />
           </div>
         ))}
       </div>
+
+      {selected.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-[#1d1b17] text-white pl-5 pr-2 py-2 rounded-full shadow-xl">
+          <span className="text-sm">{selected.length} devis sélectionné(s)</span>
+          <button
+            onClick={() => setSelected([])}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Effacer
+          </button>
+          <button
+            onClick={() => setCompareOpen(true)}
+            disabled={selected.length < 2}
+            className="flex items-center gap-2 bg-[#9b2f1e] px-4 py-2 rounded-full text-sm font-semibold hover:bg-[#872111] transition-colors disabled:opacity-40"
+          >
+            <Scale className="w-4 h-4" strokeWidth={1.75} />
+            Comparer
+          </button>
+        </div>
+      )}
+
+      {compareOpen && <QuoteCompareModal quoteIds={selected} onClose={() => setCompareOpen(false)} />}
 
       {dialog && (
         <ConfirmModal
@@ -260,15 +294,14 @@ export default function Quotes() {
 }
 
 function QuoteCard({
-  quote,
-  onAccept,
-  onReject,
-  processing,
+  quote, onAccept, onReject, processing, selected, onToggleSelect,
 }: {
   quote: QuoteItem;
   onAccept: () => void;
   onReject: () => void;
   processing: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
 }) {
   const isRejected = quote.status === 'rejected';
   const isAccepted = quote.status === 'accepted';
@@ -283,6 +316,15 @@ function QuoteCard({
           : 'border-[#dfc0ba]'
       }`}
     >
+      <label className="flex items-center gap-2 text-xs text-[#58423d] mb-3 cursor-pointer w-fit">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          className="accent-[#9b2f1e]"
+        />
+        Comparer
+      </label>
       <div className="flex justify-between items-start mb-4">
         <div className="w-12 h-12 rounded-lg bg-[#f3ede6] flex items-center justify-center overflow-hidden shrink-0">
           {quote.caterer.logo_url ? (

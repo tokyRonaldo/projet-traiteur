@@ -28,7 +28,7 @@ export const adminSections = [
       { href: '/admin/quotes', label: 'Devis', icon: FileText },
       { href: '/admin/bookings', label: 'Réservations', icon: CalendarCheck },
       { href: '/admin/payments', label: 'Paiements', icon: CreditCard },
-      { href: '/admin/reviews', label: 'Avis', icon: Star },
+      { href: '/admin/review', label: 'Avis', icon: Star },
     ],
   },
   {

@@ -57,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           onMenuClick={() => setSidebarOpen(true)}
           onLogoutClick={requestLogout}
         />
-        <main className="pt-20 p-4 md:p-8">{children}</main>
+        <main className="px-4 pb-4 pt-20 md:px-8 md:pb-8 md:pt-24">{children}</main>
       </div>
 
       {modalOpen && (

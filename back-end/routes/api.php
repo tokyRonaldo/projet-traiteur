@@ -14,7 +14,8 @@ use App\Http\Controllers\Admin\{
     AdminStatisticsController,
     AdminQuoteController,
     AdminCategoryController,
-    AdminBookingController
+    AdminBookingController,
+    AdminAssistantController
 };
 
 use App\Http\Controllers\Caterer\{
@@ -141,9 +142,11 @@ Route::middleware(['auth:sanctum', 'role:client'])->prefix('client')->group(func
     Route::get('messages/recent', [ClientMessageController::class, 'recent']);
     Route::get('bookings/next', [ClientBookingController::class, 'next']);
 
-    // routes/api.php, dans le groupe client
     Route::post('assistant/find-caterers', [ClientAssistantController::class, 'findCaterers'])
         ->middleware('throttle:10,1');
+
+    Route::post('assistant/compare-quotes', [ClientAssistantController::class, 'compareQuotes'])
+    ->middleware('throttle:10,1');
 
 });
 
@@ -298,6 +301,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
     // routes/api.php (groupe admin)
     Route::post('admin/category/{id}/image', [AdminCategoryController::class, 'uploadImage']);
+    
+    Route::post('admin/assistant/check-caterer/{id}', [AdminAssistantController::class, 'checkCaterer'])->middleware('throttle:15,1');
+    Route::post('admin/assistant/scan-reviews', [AdminAssistantController::class, 'scanReviews'])->middleware('throttle:5,1');
 });
 
 //pour admin
