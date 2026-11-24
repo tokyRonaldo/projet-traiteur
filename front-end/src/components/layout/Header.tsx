@@ -23,7 +23,7 @@ export default function Header() {
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
 
-  const roleName = user?.roles?.[0]?.name ?? user?.roles?.[0] ?? null;
+  const roleName = user?.roles?.[0]?.name ?? null;
   const dashboardHref = roleName ? DASHBOARD_BY_ROLE[roleName] ?? '/' : '/';
 
   const handleLogoutClick = () => {
@@ -44,7 +44,7 @@ export default function Header() {
 
   return (
     <>
-        {/* Overlay sombre sur mobile quand la sidebar est ouverte */}
+      {/* Overlay sombre sur mobile quand le menu est ouvert */}
       {isOpen && (
         <div
           onClick={toggleMenu}
@@ -94,8 +94,8 @@ export default function Header() {
           {isOpen && (
             <div className="md:hidden absolute top-full left-0 right-0 md:bg-background-light md:dark:bg-background-dark bg-background dark:bg-background-dark border-b border-primary/10 shadow-lg">
               <div className="px-6 py-8 flex flex-col gap-6 text-center">
-                <Link href="/" className="text-sm font-semibold hover:text-primary transition-colors">Accueil</Link>
-                <Link href="/caterers" className="text-lg font-semibold py-2" onClick={closeMenu}>Traiteurs</Link>
+                <Link href="/" className="text-lg font-semibold py-2" onClick={closeMenu}>Accueil</Link>
+                <Link href="/caterer" className="text-lg font-semibold py-2" onClick={closeMenu}>Traiteurs</Link>
                 <Link href="/#categories" className="text-lg font-semibold py-2" onClick={closeMenu}>Catégories</Link>
                 <Link href="/#how-it-works" className="text-lg font-semibold py-2" onClick={closeMenu}>Comment ça marche</Link>
 

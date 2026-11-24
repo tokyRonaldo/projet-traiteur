@@ -46,7 +46,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-[#9b2f1e] text-white',
   responded: 'bg-[#dae1e3] text-[#5d6466]',
-  draft: 'bg-[#e7e2db] text-[#58423d]',
+  rejected: 'bg-[#e7e2db] text-[#58423d]',
   accepted: 'bg-green-100 text-green-700',
 };
 
@@ -113,7 +113,7 @@ export default function EventRequests() {
     all: requests.length,
     pending: requests.filter((r) => r.status === 'pending').length,
     responded: requests.filter((r) => r.status === 'responded').length,
-    draft: requests.filter((r) => r.status === 'draft').length,
+    rejected: requests.filter((r) => r.status === 'rejected').length,
   };
 
   const getInitials = (name: string) => {
@@ -233,17 +233,17 @@ useEffect(() => setPage(1), [dateFrom, dateTo, typeFilter, minBudget, maxBudget]
 
         <button
           onClick={() => {
-            setStatusFilter('draft');
+            setStatusFilter('rejected');
             setPage(1);
           }}
           className={
-            statusFilter === 'draft'
+            statusFilter === 'rejected'
               ? 'p-4 rounded-xl border-2 border-[#9b2f1e] bg-[#bc4733]/5 shadow-sm flex flex-col gap-1 text-left transition-colors'
               : 'p-4 rounded-xl border border-[#dfc0ba] bg-white shadow-sm flex flex-col gap-1 text-left transition-colors hover:border-[#9b2f1e]'
           }
         >
           <span className="text-[#58423d] text-xs font-semibold uppercase tracking-wider">Brouillons</span>
-          <span className="text-2xl font-bold">{String(counts.draft).padStart(2, '0')}</span>
+          <span className="text-2xl font-bold">{String(counts.rejected).padStart(2, '0')}</span>
         </button>
       </div>
 

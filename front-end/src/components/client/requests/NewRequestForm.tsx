@@ -1,7 +1,7 @@
 // components/client/requests/NewRequestForm.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, X, CheckCircle2, ImageOff } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -22,7 +22,7 @@ const EVENT_TYPES = [
   'Autre',
 ];
 
-export default function NewRequestForm() {
+function NewRequestFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedCatererId = searchParams.get('caterer_id');
@@ -285,5 +285,13 @@ export default function NewRequestForm() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function NewRequestForm() {
+  return (
+    <Suspense fallback={<p className="p-6 opacity-60">Chargement...</p>}>
+      <NewRequestFormContent />
+    </Suspense>
   );
 }

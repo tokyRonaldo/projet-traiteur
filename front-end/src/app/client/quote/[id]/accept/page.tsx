@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState ,use} from "react";
 import { useRouter } from "next/navigation";
 
 export default function AcceptQuote({
@@ -8,6 +8,7 @@ export default function AcceptQuote({
 }: {
     params: Promise<{ id: string }>
 }) {
+    const { id } = use(params);
 
     const router = useRouter();
 
@@ -27,7 +28,7 @@ export default function AcceptQuote({
         if (!token) {
 
             router.push(
-                `/login?redirect=/client/quote/${params.id}/accept`
+                `/login?redirect=/client/quote/${id}/accept`
             );
 
             return;
@@ -35,7 +36,7 @@ export default function AcceptQuote({
 
 
         fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/client/quotes/${params.id}/accept`,
+            `${process.env.NEXT_PUBLIC_API_URL}/api/client/quotes/${id}/accept`,
             {
                 method: "POST",
                 headers: {
@@ -51,7 +52,7 @@ export default function AcceptQuote({
                 localStorage.removeItem("token");
 
                 router.push(
-                    `/login?redirect=/client/quote/${params.id}/accept`
+                    `/login?redirect=/client/quote/${id}/accept`
                 );
 
                 return;
@@ -98,7 +99,7 @@ export default function AcceptQuote({
         });
 
 
-    }, [params.id, router]);
+    }, [id, router]);
 
 
 

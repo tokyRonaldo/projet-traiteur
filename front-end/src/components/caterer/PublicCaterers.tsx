@@ -1,8 +1,7 @@
 // components/caterers/PublicCaterers.tsx
 'use client';
 
-
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Star, ImageOff, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -32,7 +31,7 @@ interface PaginatedResponse {
   total: number;
 }
 
-export default function PublicCaterers() {
+function PublicCaterersContent() {
   const { isAuthenticated } = useAuth();
   const searchParams = useSearchParams();
 
@@ -48,7 +47,7 @@ export default function PublicCaterers() {
   const [sort, setSort] = useState('rating');
   const [page, setPage] = useState(1);
   const [service, setService] = useState(searchParams.get('service') ?? '');
-  
+
   useEffect(() => {
     api.get('public/categories').then(setCategories).catch(() => setCategories([]));
   }, []);
@@ -65,14 +64,14 @@ export default function PublicCaterers() {
     return params.toString();
   };
 
-useEffect(() => {
-  setLoading(true);
-  api
-    .get(`public/caterers?${buildQuery()}`)
-    .then(setResults)
-    .catch(() => setResults(null))
-    .finally(() => setLoading(false));
-}, [search, service, selectedCategory, location, minRating, sort, page]);
+  useEffect(() => {
+    setLoading(true);
+    api
+      .get(`public/caterers?${buildQuery()}`)
+      .then(setResults)
+      .catch(() => setResults(null))
+      .finally(() => setLoading(false));
+  }, [search, service, selectedCategory, location, minRating, sort, page]);
 
   const ratingOptions = [3.5, 4.0, 4.5];
 
@@ -328,5 +327,13 @@ useEffect(() => {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function PublicCaterers() {
+  return (
+    <Suspense fallback={<p className="max-w-7xl mx-auto px-6 py-16 opacity-60">Chargement...</p>}>
+      <PublicCaterersContent />
+    </Suspense>
   );
 }

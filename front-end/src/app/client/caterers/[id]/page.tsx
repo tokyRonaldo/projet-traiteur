@@ -3,13 +3,14 @@ import Sidebar from "@/components/client/Sidebar";
 import Header from "@/components/client/Header";
 import CatererProfile from "@/components/client/caterer-profile/CatererProfile";
 
-export default function CatererProfilePage({ params }: { params: { id: string } }) {
+export default async function CatererProfilePage({ params }: {  params: Promise<{ id: string }>; }) {
+  const { id } = await params;
   return (
     <div className="flex min-h-screen bg-[#fef8f1]">
       <Sidebar />
       <main className="lg:ml-64 flex-1 pt-24 px-4 md:px-8 pb-8">
         <Header />
-        <CatererProfile catererId={params.id} />
+        <CatererProfile catererId={id} />
       </main>
     </div>
   );

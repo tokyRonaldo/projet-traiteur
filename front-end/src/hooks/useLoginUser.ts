@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useAuthService } from './useAuthService';
-import { useRouter, useSearchParams } from 'next/navigation';
-
+import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -12,9 +11,8 @@ export function useLoginUser() {
   const { setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const {saveAuthentication} = useAuthService();
-  const router = useRouter()
-  const searchParams = useSearchParams();
+  const { saveAuthentication } = useAuthService();
+  const router = useRouter();
 
   const login = async (data: { email: string; password: string }) => {
     setIsLoading(true);
@@ -44,7 +42,8 @@ export function useLoginUser() {
       if (result.role === 'traiteur') {
         window.location.href = '/caterer/dashboard';
       } else if (result.role === 'client') {
-        const redirect = searchParams.get('redirect');
+        // Lu ici (côté navigateur, après le clic) : pas besoin de useSearchParams
+        const redirect = new URLSearchParams(window.location.search).get('redirect');
 
         if (redirect) {
           window.location.href = redirect;

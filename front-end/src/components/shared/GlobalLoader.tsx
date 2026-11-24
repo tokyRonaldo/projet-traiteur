@@ -9,9 +9,9 @@ export default function GlobalLoader() {
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
 
+  let interval: ReturnType<typeof setInterval>;
+  let hideTimeout: ReturnType<typeof setTimeout>;
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    let hideTimeout: ReturnType<typeof setTimeout>;
 
     if (isLoading) {
       setVisible(true);
