@@ -15,6 +15,7 @@ COPY conf/php/www-overrides.conf /usr/local/etc/php-fpm.d/zz-overrides.conf
 COPY conf/nginx/nginx-site.conf /etc/nginx/http.d/default.conf
 COPY conf/supervisor/supervisord.conf /etc/supervisord.conf
 COPY conf/start.sh /start.sh
+RUN chmod +x /start.sh
 
 WORKDIR /var/www/html
 COPY . .
