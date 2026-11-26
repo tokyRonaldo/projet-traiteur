@@ -62,7 +62,7 @@ export default function ServiceFormModal({ initialData, onClose, onSaved }: Serv
 
     setUploadingMedia(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/caterer/service/${form.id}/media`, {
+      await fetch(`${process.env.LARAVEL_API_URL}/api/caterer/service/${form.id}/media`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: formData,
@@ -208,10 +208,10 @@ export default function ServiceFormModal({ initialData, onClose, onSaved }: Serv
                 {serviceMedia.map((m) => (
                   <div key={m.id} className="relative aspect-square rounded-lg overflow-hidden bg-[#ede7e0] group">
                     {m.type === 'image' ? (
-                      <img src={ `${process.env.NEXT_PUBLIC_API_URL}${m.url}`} alt="" className="w-full h-full object-cover" />
+                      <img src={ `${process.env.LARAVEL_API_URL}${m.url}`} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <video
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${m.url}`}
+                        src={`${process.env.LARAVEL_API_URL}${m.url}`}
                         className="w-full h-full object-cover"
                         controls
                       />

@@ -58,11 +58,11 @@ export default function PublicCatererProfile({ catererId }: { catererId: string 
           {caterer.gallery[0] ? (
 
             caterer.gallery[0].type == 'image' ?(
-              <img src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.gallery[0].url}`} alt=""  className="w-full h-full object-cover" />
+              <img src={`${process.env.LARAVEL_API_URL}${caterer.gallery[0].url}`} alt=""  className="w-full h-full object-cover" />
             ) : (
               <div className="relative w-full h-full">
                 <video
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.gallery[0].url}`}
+                  src={`${process.env.LARAVEL_API_URL}${caterer.gallery[0].url}`}
                   className="w-full h-full object-cover pointer-events-none"
                   preload="metadata"
                   muted
@@ -94,7 +94,7 @@ export default function PublicCatererProfile({ catererId }: { catererId: string 
             <div className="w-24 h-24 rounded-xl bg-white border-4 border-white shadow-md overflow-hidden flex items-center justify-center shrink-0 bg-primary/5">
               {caterer.logo_url ? (
                 <img 
-                src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.logo_url}`}
+                src={`${process.env.LARAVEL_API_URL}${caterer.logo_url}`}
                 alt="" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-2xl font-bold text-primary">
@@ -151,11 +151,11 @@ export default function PublicCatererProfile({ catererId }: { catererId: string 
               <div key={item.id} className="aspect-square rounded-lg overflow-hidden bg-primary/5">
                 {item.type === 'image' ? (
                   <img 
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${item.url}`}
+                  src={`${process.env.LARAVEL_API_URL}${item.url}`}
                   alt="" className="w-full h-full object-cover" />
                 ) : (
                   <video 
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${item.url}`}
+                  src={`${process.env.LARAVEL_API_URL}${item.url}`}
                   className="w-full h-full object-cover" />
                 )}
               </div>
@@ -175,7 +175,7 @@ export default function PublicCatererProfile({ catererId }: { catererId: string 
                 <div className="h-32 bg-primary/5 flex items-center justify-center">
                   {service.thumbnail_url ? (
                     <img 
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${service.thumbnail_url}`}
+                    src={`${process.env.LARAVEL_API_URL}${service.thumbnail_url}`}
                     alt="" className="w-full h-full object-cover" />
                   ) : (
                     <ImageOff className="w-6 h-6 opacity-30" strokeWidth={1.5} />

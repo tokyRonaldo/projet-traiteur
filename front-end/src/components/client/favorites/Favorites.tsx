@@ -64,7 +64,7 @@ export default function Favorites() {
           <div key={caterer.id} className="bg-white border border-[#dfc0ba] rounded-xl overflow-hidden group">
             <div className="h-32 bg-[#f3ede6] flex items-center justify-center relative">
               {caterer.logo_url ? (
-                <img src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.logo_url}`} alt="" className="w-full h-full object-cover" />
+                <img src={`${process.env.LARAVEL_API_URL}${caterer.logo_url}`} alt="" className="w-full h-full object-cover" />
               ) : (
                 <ImageOff className="w-8 h-8 text-[#8b716c]" strokeWidth={1.5} />
               )}

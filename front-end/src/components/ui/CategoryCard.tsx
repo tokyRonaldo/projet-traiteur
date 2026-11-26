@@ -11,7 +11,7 @@ export default function CategoryCard({ title, description, image }: CategoryCard
       {image && (
         <>
           <img
-            src={`${process.env.NEXT_PUBLIC_API_URL}${image}`}
+            src={`${process.env.LARAVEL_API_URL}${image}`}
             alt={title}
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />

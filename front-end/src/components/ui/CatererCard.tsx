@@ -21,7 +21,7 @@ export default function CatererCard({ id, name, cuisine, rating, price, image, f
     >
       <div className="h-56 overflow-hidden relative">
         <img
-          src={`${process.env.NEXT_PUBLIC_API_URL}${image}`}
+          src={`${process.env.LARAVEL_API_URL}${image}`}
           alt={name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />

@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUser = useCallback(async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = process.env.LARAVEL_API_URL;
       const url = `${API_URL}/api/user`;
       await fetch(`${API_URL}/sanctum/csrf-cookie`, {
         method: 'GET',

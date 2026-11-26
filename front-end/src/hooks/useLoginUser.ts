@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAuthService } from './useAuthService';
 import { useRouter } from 'next/navigation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.LARAVEL_API_URL;
 
 export function useLoginUser() {
   const { setUser } = useAuth();

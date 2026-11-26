@@ -215,7 +215,7 @@ export default function Services() {
             <div className="w-32 h-20 rounded-lg bg-[#ede7e0] flex items-center justify-center shrink-0 overflow-hidden">
               {service.thumbnail_url ? (
                 <img
-                  src={`${process.env.NEXT_PUBLIC_API_URL}${service.thumbnail_url}`} 
+                  src={`${process.env.LARAVEL_API_URL}${service.thumbnail_url}`} 
                   alt={service.title}
                   className="w-full h-full object-cover"
                 />

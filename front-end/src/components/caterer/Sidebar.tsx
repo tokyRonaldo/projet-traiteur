@@ -95,7 +95,7 @@ export default function Sidebar({ caterer, profileLoading, onLogoutClick, isOpen
                 <div className="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center overflow-hidden shrink-0">
                   {caterer.logo_url ? (
                     <img
-                      src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.logo_url}`}
+                      src={`${process.env.LARAVEL_API_URL}${caterer.logo_url}`}
                       alt={caterer.company_name}
                       className="w-full h-full object-cover"
                     />

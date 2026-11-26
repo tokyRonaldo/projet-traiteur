@@ -209,7 +209,7 @@ export default function Header({ caterer, onLogoutClick, onMenuClick }: HeaderPr
               <div className="w-8 h-8 rounded-full bg-[#ffdad4] flex items-center justify-center overflow-hidden shrink-0">
                 {caterer?.logo_url ? (
                   <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${caterer.logo_url}`}
+                    src={`${process.env.LARAVEL_API_URL}${caterer.logo_url}`}
                     alt=""
                     className="w-full h-full object-cover"
                   />
