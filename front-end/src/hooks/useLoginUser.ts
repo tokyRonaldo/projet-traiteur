@@ -18,6 +18,9 @@ export function useLoginUser() {
     setIsLoading(true);
     setError(null);
 
+    console.log('test url')
+    console.log(API_URL)
+
     try {
       const response = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
