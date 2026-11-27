@@ -11,7 +11,7 @@ import { useLoginUser } from '@/hooks/useLoginUser';
 export default function LoginPage() {
 
   const { login, isLoading, error } = useLoginUser();
-  const API_URL = process.env.LARAVEL_API_URL;
+  const API_URL = process.env.NEXT_PUBLIC_LARAVEL_API_URL;
 
   const [toast, setToast] = useState<{
     message: string;

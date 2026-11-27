@@ -226,7 +226,7 @@ function PublicCaterersContent() {
                 <div className="relative h-52 overflow-hidden bg-primary/5 flex items-center justify-center">
                   {caterer.logo_url ? (
                     <img
-                      src={`${process.env.LARAVEL_API_URL}${caterer.logo_url}`}
+                      src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${caterer.logo_url}`}
                       alt={caterer.company_name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

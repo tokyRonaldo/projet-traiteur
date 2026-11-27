@@ -329,7 +329,7 @@ function QuoteCard({
         <div className="w-12 h-12 rounded-lg bg-[#f3ede6] flex items-center justify-center overflow-hidden shrink-0">
           {quote.caterer.logo_url ? (
             <img
-              src={`${process.env.LARAVEL_API_URL}${quote.caterer.logo_url}`}
+              src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${quote.caterer.logo_url}`}
               alt=""
               className="w-full h-full object-cover"
             />

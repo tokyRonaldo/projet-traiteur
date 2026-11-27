@@ -126,7 +126,7 @@ export default function AiCatererFinder() {
                   <div className="w-14 h-14 rounded-lg bg-[#f3ede6] flex items-center justify-center overflow-hidden shrink-0">
                     {c.logo_url ? (
                       <img
-                        src={`${process.env.LARAVEL_API_URL}${c.logo_url}`}
+                        src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${c.logo_url}`}
                         alt=""
                         className="w-full h-full object-cover"
                       />

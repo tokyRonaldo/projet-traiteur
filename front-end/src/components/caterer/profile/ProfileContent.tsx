@@ -96,7 +96,7 @@ export default function ProfileContent() {
 
     setUploadingLogo(true);
     try {
-      const res = await fetch(`${process.env.LARAVEL_API_URL}/api/caterer/profile/logo`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}/api/caterer/profile/logo`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -143,7 +143,7 @@ export default function ProfileContent() {
                 className="relative group w-40 h-40 rounded-xl bg-[#ede7e0] border-2 border-dashed border-[#dfc0ba] flex flex-col items-center justify-center overflow-hidden transition-all hover:border-[#9b2f1e] cursor-pointer"
               >
                 {logoUrl ? (
-                  <img src={`${process.env.LARAVEL_API_URL}${logoUrl}`} alt="Logo" className="w-full h-full object-cover" />
+                  <img src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${logoUrl}`} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
                   <Building2 className="w-10 h-10 text-[#8b716c]" strokeWidth={1.5} />
                 )}
@@ -203,7 +203,7 @@ export default function ProfileContent() {
             </h4>
             <div className="rounded-lg overflow-hidden border border-[#dfc0ba] mb-2 h-32 bg-[#e7e2db] flex items-center justify-center">
               {logoUrl ? (
-                <img src={`${process.env.LARAVEL_API_URL}${logoUrl}`} alt="Aperçu" className="w-full h-full object-cover" />
+                <img src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${logoUrl}`} alt="Aperçu" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-xs text-[#8b716c]">Aucun logo</span>
               )}

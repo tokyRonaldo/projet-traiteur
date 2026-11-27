@@ -107,7 +107,7 @@ export default function CategoriesPage() {
                 <label className="w-14 h-14 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center cursor-pointer shrink-0 hover:ring-2 hover:ring-indigo-300 transition">
                   {cat.image_url ? (
                     <img
-                      src={`${process.env.LARAVEL_API_URL}${cat.image_url}`}
+                      src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${cat.image_url}`}
                       alt=""
                       className="w-full h-full object-cover"
                     />

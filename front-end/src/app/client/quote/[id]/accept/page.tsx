@@ -36,7 +36,7 @@ export default function AcceptQuote({
 
 
         fetch(
-            `${process.env.LARAVEL_API_URL}/api/client/quotes/${id}/accept`,
+            `${process.env.NEXT_PUBLIC_LARAVEL_API_URL}/api/client/quotes/${id}/accept`,
             {
                 method: "POST",
                 headers: {

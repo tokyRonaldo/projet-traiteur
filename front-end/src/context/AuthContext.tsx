@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const API_URL = process.env.LARAVEL_API_URL;
+  const API_URL = process.env.NEXT_PUBLIC_LARAVEL_API_URL;
 
   const fetchUser = useCallback(async (): Promise<User | null> => {
     const token = localStorage.getItem('token') ?? Cookies.get('token');

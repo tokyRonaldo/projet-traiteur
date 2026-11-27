@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAuthService } from './useAuthService';
 import { useRouter } from 'next/navigation';
 
-const API_URL = process.env.LARAVEL_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_LARAVEL_API_URL;
 
 export function useLoginUser() {
   const { setUser } = useAuth();
@@ -19,7 +19,7 @@ export function useLoginUser() {
     setError(null);
 
     console.log('test url')
-    console.log(API_URL)
+    console.log(process.env.NEXT_PUBLIC_LARAVEL_API_URL)
 
     try {
       const response = await fetch(`${API_URL}/api/login`, {

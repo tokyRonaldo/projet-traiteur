@@ -89,11 +89,11 @@ export default function CatererProfile({ catererId }: { catererId: string }) {
           {caterer.gallery[0] ? (
 
             caterer.gallery[0].type == 'image' ?(
-              <img src={`${process.env.LARAVEL_API_URL}${caterer.gallery[0].url}`} alt="" className="w-full h-full object-cover" />
+              <img src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${caterer.gallery[0].url}`} alt="" className="w-full h-full object-cover" />
             ) : (
               <div className="relative w-full h-full">
                 <video
-                  src={`${process.env.LARAVEL_API_URL}${caterer.gallery[0].url}`}
+                  src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${caterer.gallery[0].url}`}
                   className="w-full h-full object-cover pointer-events-none"
                   preload="metadata"
                   muted
@@ -122,7 +122,7 @@ export default function CatererProfile({ catererId }: { catererId: string }) {
           <div className="flex items-start gap-4 -mt-16 mb-4">
             <div className="w-24 h-24 rounded-xl bg-white border-4 border-white shadow-md overflow-hidden flex items-center justify-center shrink-0 bg-[#f3ede6]">
               {caterer.logo_url ? (
-                <img src={`${process.env.LARAVEL_API_URL}${caterer.logo_url}`} alt="" className="w-full h-full object-cover" />
+                <img src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${caterer.logo_url}`} alt="" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-2xl font-bold text-[#9b2f1e]">
                   {caterer.company_name.slice(0, 2).toUpperCase()}
@@ -201,9 +201,9 @@ export default function CatererProfile({ catererId }: { catererId: string }) {
             {caterer.gallery.slice(0, 8).map((item) => (
               <div key={item.id} className="aspect-square rounded-lg overflow-hidden bg-[#f3ede6]">
                 {item.type === 'image' ? (
-                  <img src={`${process.env.LARAVEL_API_URL}${item.url}`} alt="" className="w-full h-full object-cover" />
+                  <img src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${item.url}`} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <video src={`${process.env.LARAVEL_API_URL}${item.url}`} 
+                  <video src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${item.url}`} 
                       controls
                       className="w-full h-full object-cover" 
                     />
@@ -227,11 +227,11 @@ export default function CatererProfile({ catererId }: { catererId: string }) {
                   {service.thumbnail_url ? (
                     service.thumbnail_type == 'image' ?(
 
-                      <img src={`${process.env.LARAVEL_API_URL}${service.thumbnail_url}`} alt="" className="w-full h-full object-cover" />
+                      <img src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${service.thumbnail_url}`} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="relative w-full h-full">
                         <video
-                          src={`${process.env.LARAVEL_API_URL}${service.thumbnail_url}`}
+                          src={`${process.env.NEXT_PUBLIC_LARAVEL_API_URL}${service.thumbnail_url}`}
                           className="w-full h-full object-cover pointer-events-none"
                           preload="metadata"
                           muted
